@@ -5,7 +5,7 @@ Retrieve bounding coordinates and distances with GeoLocation.class.php
 
 This is a PHP port of Java code that was originally published at
 <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
-http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates#Java</a>. A few modifications were made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
+http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>. A few modifications were made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
 
 License:
 http://creativecommons.org/licenses/by/3.0/
