@@ -25,15 +25,19 @@ class GeoLocation {
 	public $degLat;	 // latitude in degrees
 	public $degLon;  // longitude in degrees
 
-	const MIN_LAT = deg2rad(-90);  // -PI/2
-	const MAX_LAT = deg2rad(90);   //  PI/2
-	const MIN_LON = deg2rad(-180); // -PI
-	const MAX_LON = deg2rad(180);  //  PI
 	const EARTHS_RADIUS_KM = 6371.01;
 	const EARTHS_RADIUS_MI = 3958.762079;
 
-	public function __construct() {
+	protected static $MIN_LAT;   // -PI/2
+	protected static $MAX_LAT;    //  PI/2
+	protected static $MIN_LON;  // -PI
+	protected static $MAX_LON;   //  PI
 
+	public function __construct() {
+		self::$MIN_LAT = deg2rad(-90);   // -PI/2
+		self::$MAX_LAT = deg2rad(90);    //  PI/2
+		self::$MIN_LON = deg2rad(-180);  // -PI
+		self::$MAX_LON = deg2rad(180);   //  PI
 	}
 
 	/**
@@ -67,8 +71,8 @@ class GeoLocation {
 	}
 
 	protected function checkBounds() {
-		if ($this->radLat < self::MIN_LAT || $this->radLat > self::MAX_LAT ||
-				$this->radLon < self::MIN_LON || $this->radLon > self::MAX_LON)
+		if ($this->radLat < self::$MIN_LAT || $this->radLat > self::$MAX_LAT ||
+				$this->radLon < self::$MIN_LON || $this->radLon > self::$MAX_LON)
 			throw new Exception("Invalid Argument");
 	}
 
@@ -167,19 +171,19 @@ class GeoLocation {
 
 		$minLon = 0;
 		$maxLon = 0;
-		if ($minLat > self::MIN_LAT && $maxLat < self::MAX_LAT) {
+		if ($minLat > self::$MIN_LAT && $maxLat < self::$MAX_LAT) {
 			$deltaLon = asin(sin($radDist) /
 				cos($this->radLat));
 			$minLon = $this->radLon - $deltaLon;
-			if ($minLon < self::MIN_LON) $minLon += 2 * pi();
+			if ($minLon < self::$MIN_LON) $minLon += 2 * pi();
 			$maxLon = $this->radLon + $deltaLon;
-			if ($maxLon > self::MAX_LON) $maxLon -= 2 * pi();
+			if ($maxLon > self::$MAX_LON) $maxLon -= 2 * pi();
 		} else {
 			// a pole is within the distance
-			$minLat = max($minLat, self::MIN_LAT);
-			$maxLat = min($maxLat, self::MAX_LAT);
-			$minLon = self::MIN_LON;
-			$maxLon = self::MAX_LON;
+			$minLat = max($minLat, self::$MIN_LAT);
+			$maxLat = min($maxLat, self::$MAX_LAT);
+			$minLon = self::$MIN_LON;
+			$maxLon = self::$MAX_LON;
 		}
 
 		return array(
