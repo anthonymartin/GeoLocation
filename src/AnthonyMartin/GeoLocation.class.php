@@ -25,13 +25,15 @@ class GeoLocation {
 	public $degLat;	 // latitude in degrees
 	public $degLon;  // longitude in degrees
 
+	const MIN_LAT = deg2rad(-90);  // -PI/2
+	const MAX_LAT = deg2rad(90);   //  PI/2
+	const MIN_LON = deg2rad(-180); // -PI
+	const MAX_LON = deg2rad(180);  //  PI
+	const EARTHS_RADIUS_KM = 6371.01;
+	const EARTHS_RADIUS_MI = 3958.762079;
+
 	public function __construct() {
-		define('MIN_LAT', deg2rad(-90));  // -PI/2
-		define('MAX_LAT', deg2rad(90));   //  PI/2
-		define('MIN_LON', deg2rad(-180)); // -PI
-		define('MAX_LON', deg2rad(180));  //  PI
-		define('EARTHS_RADIUS_KM', 6371.01);
-		define('EARTHS_RADIUS_MI', 3958.762079);
+
 	}
 
 	/**
@@ -65,8 +67,8 @@ class GeoLocation {
 	}
 
 	protected function checkBounds() {
-		if ($this->radLat < MIN_LAT || $this->radLat > MAX_LAT ||
-				$this->radLon < MIN_LON || $this->radLon > MAX_LON)
+		if ($this->radLat < self::MIN_LAT || $this->radLat > self::MAX_LAT ||
+				$this->radLon < self::MIN_LON || $this->radLon > self::MAX_LON)
 			throw new Exception("Invalid Argument");
 	}
 
@@ -165,19 +167,19 @@ class GeoLocation {
 
 		$minLon = 0;
 		$maxLon = 0;
-		if ($minLat > MIN_LAT && $maxLat < MAX_LAT) {
+		if ($minLat > self::MIN_LAT && $maxLat < self::MAX_LAT) {
 			$deltaLon = asin(sin($radDist) /
 				cos($this->radLat));
 			$minLon = $this->radLon - $deltaLon;
-			if ($minLon < MIN_LON) $minLon += 2 * pi();
+			if ($minLon < self::MIN_LON) $minLon += 2 * pi();
 			$maxLon = $this->radLon + $deltaLon;
-			if ($maxLon > MAX_LON) $maxLon -= 2 * pi();
+			if ($maxLon > self::MAX_LON) $maxLon -= 2 * pi();
 		} else {
 			// a pole is within the distance
-			$minLat = max($minLat, MIN_LAT);
-			$maxLat = min($maxLat, MAX_LAT);
-			$minLon = MIN_LON;
-			$maxLon = MAX_LON;
+			$minLat = max($minLat, self::MIN_LAT);
+			$maxLat = min($maxLat, self::MAX_LAT);
+			$minLon = self::MIN_LON;
+			$maxLon = self::MAX_LON;
 		}
 
 		return array(
@@ -189,9 +191,9 @@ class GeoLocation {
 	protected function getEarthsRadius($unit_of_measurement) {
 		$u = $unit_of_measurement;
 		if($u == 'miles' || $u == 'mi')
-			return $radius = EARTHS_RADIUS_MI;
+			return $radius = self::EARTHS_RADIUS_MI;
 		elseif($u == 'kilometers' || $u == 'km')
-			return $radius = EARTHS_RADIUS_KM;
+			return $radius = self::EARTHS_RADIUS_KM;
 
 		else throw new Exception('You must supply a valid unit of measurement');
 	}
@@ -209,6 +211,12 @@ class GeoLocation {
 	    curl_setopt($ch, CURLOPT_URL,$url);
 	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	    return json_decode(curl_exec($ch));
+	}
+	public static function MilesToKilometers($miles) {
+		return $miles * 1.6093439999999999;
+	}
+	public static function KilometersToMiles($km) {
+		return $km * 0.621371192237334;
 	}
 }
 
