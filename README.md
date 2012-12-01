@@ -10,8 +10,11 @@ http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates#Java</a>. A few modi
 License:
 http://creativecommons.org/licenses/by/3.0/
 
-Example: Retrieving distance between two points:
----------------------------------------
+Examples
+========
+
+Get distance between two points:
+--------------------------------------------------------
 <pre>
 	<code>
 		// Set locations
@@ -33,8 +36,8 @@ Example: Retrieving distance between two points:
 </pre>
 
 
-Example: Retrieving bounding coordinates
----------------------------------------
+Get bounding coordinates
+--------------------------------------------------------
 <pre>
 	<code>
 		$edison = GeoLocation::fromDegrees(40.5187154, -74.4120953);
@@ -57,8 +60,8 @@ Example: Retrieving bounding coordinates
 	</code>
 </pre>
 
-Example: get latitude and longitude from address or location
----------------------------------------
+Get latitude and longitude from address or location
+--------------------------------------------------------
 <pre>
 	<code>
 	$location = 'New York City';
