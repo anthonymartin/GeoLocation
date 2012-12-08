@@ -17,6 +17,8 @@ Get distance between two points:
 --------------------------------------------------------
 <pre>
 	<code>
+		use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
+		
 		// Set locations
 		$edison_nj = GeoLocation::fromDegrees(40.5187154, -74.4120953);
 		$brooklyn_ny = GeoLocation::fromDegrees(40.65, -73.95);
@@ -40,6 +42,8 @@ Get bounding coordinates
 --------------------------------------------------------
 <pre>
 	<code>
+		use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
+		
 		$edison = GeoLocation::fromDegrees(40.5187154, -74.4120953);
 		$coordinates = $edison->boundingCoordinates(3, 'miles');
 
@@ -64,6 +68,8 @@ Get latitude and longitude from address or location
 --------------------------------------------------------
 <pre>
 	<code>
+	use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
+	
 	$location = 'New York City';
 	$response = GeoLocation::getGeocodeFromGoogle($location);
 	$latitude = $response->results[0]->geometry->location->lng;
