@@ -72,7 +72,7 @@ Get latitude and longitude from address or location
 	
 	$location = 'New York City';
 	$response = GeoLocation::getGeocodeFromGoogle($location);
-	$latitude = $response->results[0]->geometry->location->lng;
+	$latitude = $response->results[0]->geometry->location->lat;
 	$longitude = $response->results[0]->geometry->location->lng;
 	echo $latitude . ', ' . $longitude;
 	# 40.7143528, -74.0059731
