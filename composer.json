@@ -1,15 +1,13 @@
 {
-    "name": "anthonymartin/geo-location",
+    "name": "demerzel/geo-location",
     "type": "class",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
-    "homepage": "https://github.com/anthonymartin/GeoLocation.class.php",
+    "homepage": "https://github.com/demerzel3/GeoLocation",
     "license": "CC 3.0",
     "authors": [
         {
-            "name": "Anthony Martin",
-            "email": "anthony@replaycreative.com",
-            "homepage": "http://replaycreative.com",
+            "name": "Gabriele Genta",
             "role": "Developer"
         }
     ],
@@ -18,7 +16,7 @@
     },
     "autoload": {
         "psr-0": {
-            "anthonymartin": "src/AnthonyMartin"
+            "Demerzel": "src"
         }
     }
 }
