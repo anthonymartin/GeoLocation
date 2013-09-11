@@ -1,7 +1,7 @@
-GeoLocation.class.php
-=====================
+GeoLocation
+===========
 
-Retrieve bounding coordinates and distances with GeoLocation.class.php
+Retrieve bounding coordinates and distances with GeoLocation.
 
 This is a PHP port of Java code that was originally published at
 <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
