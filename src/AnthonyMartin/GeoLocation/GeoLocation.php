@@ -1,5 +1,5 @@
 <?php
-namespace Demerzel\GeoLocation;
+namespace AnthonyMartin\GeoLocation;
 
 /**
  * <p>Represents a point on the surface of a sphere. (The Earth is almost
