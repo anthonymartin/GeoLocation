@@ -3,7 +3,7 @@
     "type": "class",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
-    "homepage": "https://github.com/anthonymartin/GeoLocation.class.php",
+    "homepage": "https://github.com/anthonymartin/GeoLocation.php",
     "license": "CC 3.0",
     "authors": [
         {
