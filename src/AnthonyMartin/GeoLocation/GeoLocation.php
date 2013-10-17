@@ -19,11 +19,13 @@ namespace AnthonyMartin\GeoLocation;
  */
 class GeoLocation {
 
-	public $radLat;  // latitude in radians
-	public $radLon;  // longitude in radians
+	private $radLat;  // latitude in radians
+	private $radLon;  // longitude in radians
 
-	public $degLat;	 // latitude in degrees
-	public $degLon;  // longitude in degrees
+	private $degLat;	 // latitude in degrees
+	private $degLon;  // longitude in degrees
+	
+	private $angular; // angular radius
 
 	const EARTHS_RADIUS_KM = 6371.01;
 	const EARTHS_RADIUS_MI = 3958.762079;
@@ -115,12 +117,19 @@ class GeoLocation {
 	public function getLatitudeInRadians() {
 		return $this->radLat;
 	}
-
+	
 	/**
 	 * @return double the longitude, in radians.
 	 */
 	public function getLongitudeInRadians() {
 		return $this->radLon;
+	}
+	
+	/**
+	 * @return double angular radius.
+	 */
+	public function getAngular() {
+		return $this->angular;
 	}
 
 	public function __toString() {
@@ -169,15 +178,15 @@ class GeoLocation {
 		if ($radius < 0 || $distance < 0) throw new \Exception('Arguments must be greater than 0.');
 
 		// angular distance in radians on a great circle
-		$radDist = $distance / $radius;
+		$this->angular = $distance / $radius;
 
-		$minLat = $this->radLat - $radDist;
-		$maxLat = $this->radLat + $radDist;
+		$minLat = $this->radLat - $this->angular;
+		$maxLat = $this->radLat + $this->angular;
 
 		$minLon = 0;
 		$maxLon = 0;
 		if ($minLat > self::$MIN_LAT && $maxLat < self::$MAX_LAT) {
-			$deltaLon = asin(sin($radDist) /
+			$deltaLon = asin(sin($this->angular) /
 				cos($this->radLat));
 			$minLon = $this->radLon - $deltaLon;
 			if ($minLon < self::$MIN_LON) $minLon += 2 * pi();
