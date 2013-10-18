@@ -47,11 +47,11 @@ Get bounding coordinates
 		$edison = GeoLocation::fromDegrees(40.5187154, -74.4120953);
 		$coordinates = $edison->boundingCoordinates(3, 'miles');
 
-		echo "min latitude: " . $coordinates[0]->degLat . " \n";
-		echo "min longitude: " . $coordinates[0]->degLon . " \n";
+		echo "min latitude: " . $coordinates[0]->getLatitudeInDegrees() . " \n";
+		echo "min longitude: " . $coordinates[0]->getLongitudeInDegrees() . " \n";
 
-		echo "max latitude: " . $coordinates[1]->degLat . " \n";
-		echo "max longitude: " . $coordinates[1]->degLon . " \n";
+		echo "max latitude: " . $coordinates[1]->getLatitudeInDegrees() . " \n";
+		echo "max longitude: " . $coordinates[1]->getLongitudeInDegrees() . " \n";
 
 		/**
 		*	Returns:
