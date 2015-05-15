@@ -2,6 +2,7 @@ GeoLocation
 ===========
 
 Retrieve bounding coordinates and distances with GeoLocation.
+You can also calculate and measure the distance between geopoints with this php class.
 
 This is a PHP port of Java code that was originally published at
 <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
