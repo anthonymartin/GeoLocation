@@ -6,9 +6,13 @@ Bitcoin - 1PPLC86abWCb3Ahez14vcJPUan6Zes9D5t
 Ether - 0x92f59580479eaf61d4d81ee8441ff23fb1ec57dc  
 Litecoin - LPdsE3eHKnoxGa8yUkLoCwr7NXdh4WorRW
 
-GeoLocation
+# GeoLocation
 ===========
 
+## Requiremens
+```bash 
+   -php>=7.0
+```
 Retrieve bounding coordinates and distances with GeoLocation.
 You can also calculate and measure the distance between geopoints with this php class.
 
@@ -16,12 +20,12 @@ This is a PHP port of Java code that was originally published at
 <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
 http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>. A few modifications were made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
 
-License:
-http://creativecommons.org/licenses/by/3.0/
+## Usage
 
-Examples
-========
-
+## Testing
+```bash 
+$ ./bin/vendor/phpunit
+```
 Get distance between two points:
 --------------------------------------------------------
 <pre>
@@ -87,3 +91,7 @@ Get latitude and longitude from address or location
 	# 40.7143528, -74.0059731
 	</code>
 </pre>
+
+## License
+
+Attribution 3.0 Unported (CC BY 3.0) . Please see [License File](http://creativecommons.org/licenses/by/3.0/) for more information.

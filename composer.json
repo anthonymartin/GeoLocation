@@ -14,12 +14,12 @@
         }
     ],
     "require": {
-        "php": ">=5.3.0",
+        "php": "^5.4 || ^7.0",
         "phpunit/phpunit": "^6.4"
     },
     "autoload": {
         "psr-4": {
-            "AnthonyMartin\\GeoLocation\\": "src/AnthonyMartin/GeoLocation"
+            "AnthonyMartin\\GeoLocation\\": "src/GeoLocation"
         }
     }
 }

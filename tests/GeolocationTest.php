@@ -17,7 +17,7 @@ final class GeolocationTest extends TestCase
 	}
 
     /** @test*/
-    public function initial_test(): void
+    public function can_get_distance_between_two_points(): void
     {
 		// Distance from Edison, NJ to Brookyln, NY: 25.888611494606 miles 
 		$dist_in_miles = $this->edison_nj->distanceTo($this->brooklyn_ny, 'miles');
