@@ -4,7 +4,7 @@
          verbose="true"
          stopOnFailure="true">
     <testsuite>
-        <testsuite name="AnthonyMartin">
+        <testsuite name="GeoLocation">
             <directory>tests</directory>
         </testsuite>
     </testsuite>
