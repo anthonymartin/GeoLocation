@@ -1,6 +1,6 @@
 {
     "name": "anthonymartin/geo-location",
-    "type": "class",
+    "type": "library",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
     "homepage": "https://github.com/anthonymartin/GeoLocation.php",
