@@ -1,10 +1,10 @@
 <?php
 declare(strict_types = 1);
 
-use PHPUnit\Framework\TestCase;
 use AnthonyMartin\GeoLocation\GeoLocation;
+use PHPUnit\Framework\TestCase;
 
-final class GeolocationTest extends TestCase
+final class GeoLocationTest extends TestCase
 {
 	public $edison_nj;
 	public $brooklyn_ny;
