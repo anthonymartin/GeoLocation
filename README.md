@@ -42,32 +42,30 @@ $origin->distanceTo($destination, 'kilometers')
 ### Get bounding coordinates
 
 ```php
-use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
 		
-$edison = GeoLocation::fromDegrees(40.5187154, -74.4120953);
-$coordinates = $edison->boundingCoordinates(3, 'miles');
+$location = GeoLocation::fromDegrees(40.5187154, -74.4120953);
+$coordinates = $location->boundingCoordinates(3, 'miles');
 
-echo "min latitude: " . $coordinates[0]->getLatitudeInDegrees() . " \n";
-echo "min longitude: " . $coordinates[0]->getLongitudeInDegrees() . " \n";
+$coordinates[0]->getLatitudeInDegrees();
+// 40.47529593323
 
-echo "max latitude: " . $coordinates[1]->getLatitudeInDegrees() . " \n";
-echo "max longitude: " . $coordinates[1]->getLongitudeInDegrees() . " \n";
+$coordinates[0]->getLongitudeInDegrees();
+// -74.469211617725
 
-/**
-*	Returns:
-*	min latitude: 40.47529593323 
-*	min longitude: -74.469211617725 
-*	max latitude: 40.56213486677 
-*	max longitude: -74.354978982275 
-**/
+$coordinates[1]->getLatitudeInDegrees();
+// 40.56213486677
+
+$coordinates[1]->getLongitudeInDegrees();
+// -74.354978982275
+
 ```
 
-Get latitude and longitude from address or location
---------------------------------------------------------
+### Get latitude and longitude from address or location
+
 ```php
-use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
-	
+
 $location = 'New York City';
+
 $response = GeoLocation::getGeocodeFromGoogle($location);
 $latitude = $response->results[0]->geometry->location->lat;
 $longitude = $response->results[0]->geometry->location->lng;
