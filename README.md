@@ -1,17 +1,18 @@
 # GeoLocation
-
-[![Latest Version on Packagist][ico-version]](link-packagist)
+<div align="center">
+[![Latest Version on Packagist][ico-version]](https://packagist.org/packages/anthonymartin/geo-location)
 [![Software License][ico-license]](LICENSE.md)
+</div>
 
 Retrieve bounding coordinates and distances with GeoLocation.
 You can also calculate and measure the distance between geopoints with this php class.
 
-**Note:** This is a PHP port of Java code adopted from [Anthony Martin](https://github.com/anthonymartin)'s [GeoLocation PHP class](https://github.com/anthonymartin/GeoLocation.php), that was originally published by
+>**Note:** This is a PHP port of Java code that was originally published by
 [Jan Philip Matuschek](http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates). The package has few modifications made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
 
 ## Installation
 ```bash
-$ composer install  Reaper45/GeoLocation
+$ composer require anthonymartin/geo-location
 ```
 
 ## Testing
@@ -80,9 +81,13 @@ $longitude = $response->results[0]->geometry->location->lng;
 
 ## Credits
 
-- [Anthony Martin](https://github.com/anthonymartin/)
-- [All Contributers](https://github.com/Reaper45/GeoLocation/graphs/contributors)
+- [All Contributers](https://github.com/anthonymartin/GeoLocation.php/graphs/contributors)
 
+
+## Donate
+- ***Bitcoin:*** 1PPLC86abWCb3Ahez14vcJPUan6Zes9D5t
+- ***Ether:*** 0x92f59580479eaf61d4d81ee8441ff23fb1ec57dc
+- ***Litecoin:*** LPdsE3eHKnoxGa8yUkLoCwr7NXdh4WorRW
 
 ## License
 
