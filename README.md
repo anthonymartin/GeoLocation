@@ -1,10 +1,12 @@
 # GeoLocation
 
+[![Latest Version on Packagist][ico-version]](link-packagist)
+[![Software License][ico-license]](LICENSE.md)
 
 Retrieve bounding coordinates and distances with GeoLocation.
 You can also calculate and measure the distance between geopoints with this php class.
 
-This is a PHP port of Java code adopted from [Anthony Martin](https://github.com/anthonymartin)'s [GeoLocation PHP class](https://github.com/anthonymartin/GeoLocation.php), that was originally published by
+**Note:** This is a PHP port of Java code adopted from [Anthony Martin](https://github.com/anthonymartin)'s [GeoLocation PHP class](https://github.com/anthonymartin/GeoLocation.php), that was originally published by
 [Jan Philip Matuschek](http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates). The package has few modifications made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
 
 ## Installation
