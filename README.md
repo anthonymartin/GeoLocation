@@ -9,7 +9,7 @@ This is a PHP port of Java code adopted from [Anthony Martin](https://github.com
 
 ## Installation
 ```bash
-$ composer install  AnthonyMartin/GeoLocation
+$ composer install  Reaper45/GeoLocation
 ```
 
 ## Testing
@@ -79,6 +79,7 @@ $longitude = $response->results[0]->geometry->location->lng;
 ## Credits
 
 - [Anthony Martin](https://github.com/anthonymartin/)
+- [All Contributers](https://github.com/Reaper45/GeoLocation/graphs/contributors)
 
 
 ## License
