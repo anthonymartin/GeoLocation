@@ -1,7 +1,9 @@
 # GeoLocation
 <div align="center">
-[![Latest Version on Packagist][ico-version]](https://packagist.org/packages/anthonymartin/geo-location)
+
+[![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
+
 </div>
 
 Retrieve bounding coordinates and distances with GeoLocation.
