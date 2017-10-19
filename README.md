@@ -67,11 +67,20 @@ $coordinates[1]->getLongitudeInDegrees();
 $location = 'New York City';
 
 $response = GeoLocation::getGeocodeFromGoogle($location);
+
 $latitude = $response->results[0]->geometry->location->lat;
+// 40.7143528
+
 $longitude = $response->results[0]->geometry->location->lng;
-echo $latitude . ', ' . $longitude;
-# 40.7143528, -74.0059731
+// -74.0059731
+
 ```
+
+## Credits
+
+- [Anthony Martin](https://github.com/anthonymartin/)
+
+
 ## License
 
 Attribution 3.0 Unported (CC BY 3.0) . Please see [License File](http://creativecommons.org/licenses/by/3.0/) for more information.
