@@ -1,8 +1,5 @@
 # GeoLocation
-<div align="center">
-[![Latest Version on Packagist][ico-version]](https://packagist.org/packages/anthonymartin/geo-location)
 [![Software License][ico-license]](LICENSE.md)
-</div>
 
 Retrieve bounding coordinates and distances with GeoLocation.
 You can also calculate and measure the distance between geopoints with this php class.
