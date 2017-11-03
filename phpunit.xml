@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php"
+         colors="true"
+         verbose="true"
+         stopOnFailure="true">
+    <testsuite>
+        <testsuite name="GeoLocation">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuite>
+</phpunit>
