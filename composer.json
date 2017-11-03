@@ -3,13 +3,19 @@
     "type": "library",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
-    "homepage": "https://github.com/anthonymartin/GeoLocation.php",
+    "homepage": "https://github.com/reaper45/GeoLocation",
     "license": "CC 3.0",
     "authors": [
         {
             "name": "Anthony Martin",
             "email": "anthony@replaycreative.com",
             "homepage": "http://replaycreative.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Joram Mwashighadi",
+            "email": "jomwashighadi@gmail.com",
+            "homepage": "https://github.com/reaper45/",
             "role": "Developer"
         }
     ],
