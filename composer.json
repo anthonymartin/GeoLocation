@@ -1,21 +1,15 @@
 {
-    "name": "reaper45/geo-location",
+    "name": "anthonymartin/geo-location",
     "type": "library",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
-    "homepage": "https://github.com/reaper45/GeoLocation",
+    "homepage": "https://github.com/anthonymartin/GeoLocation.php",
     "license": "CC 3.0",
     "authors": [
         {
             "name": "Anthony Martin",
             "email": "anthony@replaycreative.com",
             "homepage": "http://replaycreative.com",
-            "role": "Developer"
-        },
-        {
-            "name": "Joram Mwashighadi",
-            "email": "jomwashighadi@gmail.com",
-            "homepage": "https://github.com/reaper45/",
             "role": "Developer"
         }
     ],
