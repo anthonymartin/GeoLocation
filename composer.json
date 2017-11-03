@@ -1,5 +1,5 @@
 {
-    "name": "anthonymartin/geo-location",
+    "name": "reaper45/geo-location",
     "type": "library",
     "description": "Retrieve bounding coordinates, distances, longitude and latitude with GeoLocation.class.php",
     "keywords": ["geolocation","geocoding", "bounding coordinates", "distances"],
