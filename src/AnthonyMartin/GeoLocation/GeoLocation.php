@@ -19,13 +19,13 @@ namespace AnthonyMartin\GeoLocation;
  */
 class GeoLocation {
 
-	private $radLat;  // latitude in radians
-	private $radLon;  // longitude in radians
+	protected $radLat;  // latitude in radians
+	protected $radLon;  // longitude in radians
 
-	private $degLat;	 // latitude in degrees
-	private $degLon;  // longitude in degrees
+	protected $degLat;	 // latitude in degrees
+	protected $degLon;  // longitude in degrees
 	
-	private $angular; // angular radius
+	protected $angular; // angular radius
 
 	const EARTHS_RADIUS_KM = 6371.01;
 	const EARTHS_RADIUS_MI = 3958.762079;
