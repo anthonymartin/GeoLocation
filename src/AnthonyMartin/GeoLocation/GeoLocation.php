@@ -22,7 +22,7 @@ class GeoLocation {
 	private $radLat;  // latitude in radians
 	private $radLon;  // longitude in radians
 
-	private $degLat;	 // latitude in degrees
+	private $degLat;  // latitude in degrees
 	private $degLon;  // longitude in degrees
 	
 	private $angular; // angular radius
