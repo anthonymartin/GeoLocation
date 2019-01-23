@@ -1,11 +1,3 @@
-Follow the author: @pressplayplease
-
-Is this code useful? Has it saved you time? Please consider donating:
-
-Bitcoin - 1PPLC86abWCb3Ahez14vcJPUan6Zes9D5t  
-Ether - 0x92f59580479eaf61d4d81ee8441ff23fb1ec57dc  
-Litecoin - LPdsE3eHKnoxGa8yUkLoCwr7NXdh4WorRW
-
 GeoLocation
 ===========
 
