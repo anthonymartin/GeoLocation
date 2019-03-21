@@ -217,14 +217,15 @@ class GeoLocation {
 	}
 	/**
 	 *  Retrieves Geocoding information from Google
-	 *  eg. $response = GeoLocation::getGeocodeFromGoogle($location);
+	 *  eg. $response = GeoLocation::getGeocodeFromGoogle($location, $key);
 	 *		$latitude = $response->results[0]->geometry->location->lng;
 	 *	    $longitude = $response->results[0]->geometry->location->lng;
 	 *	@param string $location address, city, state, etc.
+	 *	@param string $key - the key provided by Google
 	 *	@return \stdClass
 	 */
-	public static function getGeocodeFromGoogle($location) {
-		$url = 'http://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($location).'&sensor=false';
+	public static function getGeocodeFromGoogle($location, $key) {
+		$url = 'https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($location).'&sensor=false&key='.$key;
 		$ch = curl_init();
 	    curl_setopt($ch, CURLOPT_URL,$url);
 	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
