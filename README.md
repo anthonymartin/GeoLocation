@@ -4,12 +4,6 @@ GeoLocation
 Retrieve bounding coordinates and distances with GeoLocation.
 You can also calculate and measure the distance between geopoints with this php class.
 
-This is a PHP port of Java code that was originally published at
-<a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
-http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>. A few modifications were made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
-
-License:
-http://creativecommons.org/licenses/by/3.0/
 
 Examples
 ========
@@ -72,10 +66,21 @@ Get latitude and longitude from address or location
 	use AnthonyMartin\GeoLocation\GeoLocation as GeoLocation;
 	
 	$location = 'New York City';
-	$response = GeoLocation::getGeocodeFromGoogle($location);
+	$response = GeoLocation::getGeocodeFromGoogle($location, 'google-api-key-goes-here');
 	$latitude = $response->results[0]->geometry->location->lat;
 	$longitude = $response->results[0]->geometry->location->lng;
 	echo $latitude . ', ' . $longitude;
 	# 40.7143528, -74.0059731
 	</code>
 </pre>
+
+Credits and Legal
+--------------------------------------------------------
+This is a PHP class written by Anthony Martin based on Java code that was originally published at
+<a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
+http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>. A few modifications were made and an additional helper method to retrieve latitude and longitude from an address has been provided using Google's Geocoding API. <br />
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License:
+http://creativecommons.org/licenses/by/3.0/
