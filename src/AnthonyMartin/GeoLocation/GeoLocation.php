@@ -11,7 +11,7 @@ namespace AnthonyMartin\GeoLocation;
  * <p>This is a PHP port of Java code that was originally published at
  * <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates#Java">
  * http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates#Java</a>.</p>
- * 
+ *
  * Many thanks to the original author: Jan Philip Matuschek
  *
  * @author Anthony Martin
@@ -48,7 +48,7 @@ class GeoLocation {
 	 * @return GeoLocation
 	 */
 	public static function fromDegrees($latitude, $longitude) {
-		$location = new GeoLocation();
+		$location = new Self();
 		$location->radLat = deg2rad($latitude);
 		$location->radLon = deg2rad($longitude);
 		$location->degLat = $latitude;
@@ -63,7 +63,7 @@ class GeoLocation {
 	 * @return GeoLocation
 	 */
 	public static function fromRadians($latitude, $longitude) {
-		$location = new GeoLocation();
+		$location = new Self();
 		$location->radLat = $latitude;
 		$location->radLon = $longitude;
 		$location->degLat = rad2deg($latitude);
