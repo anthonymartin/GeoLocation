@@ -110,7 +110,7 @@ Run the following from the project directory:
 
 Credits and Legal
 --------------------------------------------------------
-This is a collection of PHP classes written by Anthony Martin. GeoLocation.php was derived from Java code that was originally published at
+This is a collection of PHP classes written by Anthony Martin. Some of GeoLocation.php was derived from Java code that was originally published at
 <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
 http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>.<br />
 
