@@ -91,7 +91,6 @@ $polygon = $boundingBox->toPolygon();
 
 and now you can check if the GeoPoint is the polygon / bounding box:
 ```php
-<?php 
 if ($geopointA->inPolygon($polygon)) {
   echo "GeoPoint is in Polygon / Bounding Box!";
 }
