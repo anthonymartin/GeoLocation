@@ -151,7 +151,7 @@ class GeoPoint {
    * @throws UnexpectedResponseException if Google sends us something that we don't expect. we only like nice presents not 500 errors and the like
    * @throws NoApiKeyException if you forget to pass a google API key. create one at https://console.cloud.google.com for Geocoding API
    */
-  static function fromAddress($address, $apiKey=null) {
+  public static function fromAddress($address, $apiKey=null) {
     if (!$apiKey) {
       throw new NoApiKeyException();
     }
