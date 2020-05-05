@@ -18,7 +18,7 @@ class Earth {
 		elseif($u == 'kilometers' || $u == 'km')
 			return $radius = self::RADIUS_KM;
 
-		else throw new InvalidArgumentException('You must supply a valid unit of measurement');
+		else throw new \InvalidArgumentException('You must supply a valid unit of measurement');
 	}
 
     /**
