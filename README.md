@@ -215,6 +215,35 @@ The `GeoLocation` class remains available but is deprecated in favor of
 (including API error statuses), or `null` on transport/JSON failure; `getAngular()` is zero until a bounding
 radius is calculated.
 
+Preparing for 3.0
+--------
+The `2.x` maintenance branch retains PHP 5.4 compatibility and all 2.1.1 behavior.
+Version 2.1.2 adds documentation-only deprecations; it emits no runtime warnings.
+Before upgrading to 3.0:
+
+- Replace the deprecated `GeoLocation` class and `GeoLocationInterface` with
+  `GeoPoint`, `BoundingBox`, and `Polygon`.
+- Prepare to assign replacement points instead of calling `setDegLat()`,
+  `setDegLon()`, `setRadLat()`, or `setRadLon()`. 3.0 introduces
+  `withLatitude($value, $inRadians = false)` and `withLongitude(...)`.
+- Use named box corner getters or `getPerimeter()`. In 3.0 `getVertices()` and
+  `getGeoPoints()` use SW, SE, NE, NW perimeter order.
+- Avoid strict comparisons that rely on integer or string coordinate getters;
+  3.0 getters return floats, including radian getters and box coordinates.
+- Move geocoding to `(new GoogleGeocoder($apiKey))->geocode($address)` when
+  adopting 3.0. It returns a `GeoPoint` or throws; the legacy raw-response API
+  and `GeoPoint::fromAddress()` are removed then. This new public geocoder API
+  is not available in 2.x.
+- Catch `ExceptionInterface` for all library errors. In 3.0 the library's
+  `InvalidArgumentException` extends PHP's `\InvalidArgumentException`, rather
+  than the library's `Exceptions\Exception`.
+- Plan for a modern PHP runtime and native method/return types in 3.0;
+  subclasses and interface implementations must match those signatures.
+
+Incomplete polygons continue to return `false`, and interfaces continue to
+omit constructors. Geometry continues to work without cURL. Applications on
+`^2.0` will not automatically receive 3.0.
+
 Running Tests
 --------
 Run these commands from the root of a checkout of this repository.

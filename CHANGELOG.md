@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.2 — 2026-10-23
+
+- Document the 3.0 migration before removing or changing APIs: legacy
+  `GeoLocation`/interface and geocoding, mutable point setters, indexed box
+  corner assumptions, input-type-preserving coordinate getters, and the
+  library base of `InvalidArgumentException`.
+- Announce native types and a modern PHP minimum for 3.0. Keep PHP 5.4 support
+  and every 2.1.1 runtime behavior on the `2.x` maintenance branch. These are
+  docblock and documentation deprecations only, with no runtime warnings.
+- Keep incomplete-polygon containment returning `false` and keep constructors
+  out of interfaces in both release lines.
+
 ## 2.1.1 — 2026-10-23
 
 Version 2.1.0 unintentionally changed public behaviors that worked in 2.0.1.
