@@ -6,16 +6,21 @@ namespace AnthonyMartin\GeoLocation;
 
 class Earth {
 
-  const RADIUS_KM = 6371.01;
-  const RADIUS_MI = 3958.762079;
-  /** @var float Bounds in radians; retained as writable properties for compatibility. */
-  public static $MIN_LAT = -M_PI_2;
-  /** @var float Bounds in radians; retained as writable properties for compatibility. */
-  public static $MAX_LAT = M_PI_2;
-  /** @var float Bounds in radians; retained as writable properties for compatibility. */
-  public static $MIN_LON = -M_PI;
-  /** @var float Bounds in radians; retained as writable properties for compatibility. */
-  public static $MAX_LON = M_PI;
+  public const float RADIUS_KM = 6371.01;
+  public const float RADIUS_MI = 3958.762079;
+  /** WGS-84 semi-major axis in meters. */
+  public const float WGS84_A = 6378137.0;
+  /** WGS-84 flattening. */
+  public const float WGS84_F = 1 / 298.257223563;
+
+  /** @deprecated Use the bound getters; writable compatibility properties will be removed in 4.0. */
+  public static float $MIN_LAT = -M_PI_2;
+  /** @deprecated Use the bound getters; writable compatibility properties will be removed in 4.0. */
+  public static float $MAX_LAT = M_PI_2;
+  /** @deprecated Use the bound getters; writable compatibility properties will be removed in 4.0. */
+  public static float $MIN_LON = -M_PI;
+  /** @deprecated Use the bound getters; writable compatibility properties will be removed in 4.0. */
+  public static float $MAX_LON = M_PI;
 
   /** @param string $unit_of_measurement */
   public static function getRadius(mixed $unit_of_measurement): float {
