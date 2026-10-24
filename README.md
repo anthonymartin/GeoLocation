@@ -386,3 +386,30 @@ and `WGS84_F` describe the reference ellipsoid. Use `Earth::getMINLAT()` /
 `getMAXLAT()` / `getMINLON()` / `getMAXLON()` for radian bounds. The old writable
 bound properties are now typed floats and deprecated for removal in 4.0. This
 deprecation applies only to 3.x; the supported 2.x APIs are unchanged.
+
+### Spherical navigation
+
+`bearingTo()` and `finalBearingTo()` return degrees clockwise from north in
+[0, 360). `destination()` accepts a nonnegative distance and any finite bearing;
+`midpointTo()` and `interpolate($to, $fraction)` follow the shortest great-circle
+arc. Fractions must be in [0, 1]. Coincident and antipodal bearings are undefined
+and throw `InvalidArgumentException`; antipodal interpolation also throws.
+At the north pole initial bearing is south (180°), at the south pole north (0°).
+A destination from a pole uses the starting longitude to orient its local tangent.
+These are spherical calculations using the same Earth radii as `distanceTo()`.
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+
+$cambridge = new GeoPoint(52.205, 0.119);
+$paris = new GeoPoint(48.857, 2.351);
+$bearing = $cambridge->bearingTo($paris); // approximately 156.167 degrees
+$destination = $cambridge->destination(100, $bearing, 'km');
+$halfway = $cambridge->midpointTo($paris);
+```
+
+The tests use [Chris Veness's spherical reference](https://www.movable-type.co.uk/scripts/latlong.html)
+and 500 deterministic random round trips checked to within one millimeter.
