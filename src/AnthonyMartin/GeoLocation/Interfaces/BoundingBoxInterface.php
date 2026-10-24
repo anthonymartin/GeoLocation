@@ -5,7 +5,6 @@ namespace AnthonyMartin\GeoLocation\Interfaces;
 use AnthonyMartin\GeoLocation\GeoPoint;
 
 interface BoundingBoxInterface {
-  public function __construct($minLat, $minLon, $maxLat, $maxLon, $inRadians = false);
   public static function fromGeoPoint(GeoPoint $geopoint, $distance, $unit_of_measurement);
   public function contains(GeoPoint $geopoint);
   public function getMinLatitude();
