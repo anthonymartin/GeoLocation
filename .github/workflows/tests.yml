@@ -19,7 +19,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: curl, mbstring, dom, xml, xmlwriter, :bcmath
+          extensions: curl, mbstring, dom, xml, xmlwriter, pdo_sqlite, :bcmath
           coverage: none
           tools: composer:v2
       - run: composer install --no-interaction --prefer-dist
