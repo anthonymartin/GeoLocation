@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AnthonyMartin\GeoLocation\Interfaces;
 
-interface BoundingBoxInterface {
+interface BoundingBoxInterface extends Region {
     /**
      * @param int|float|numeric-string $distance
      * @param string $unit_of_measurement

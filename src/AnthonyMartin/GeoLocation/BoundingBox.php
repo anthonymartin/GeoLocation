@@ -9,6 +9,9 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidBoundingBoxCoordinatesException;
 
 class BoundingBox implements Interfaces\BoundingBoxInterface {
 
+  /** A box is its own envelope. */
+  public function boundingBox(): Interfaces\BoundingBoxInterface { return $this; }
+
   protected float $minLon;
   protected float $minLat;
   protected float $maxLon;

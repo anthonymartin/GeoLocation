@@ -11,6 +11,9 @@ use AnthonyMartin\GeoLocation\Exceptions\OutOfBoundsException;
 
 /** Immutable geographic coordinate; all getters return floats. */
 final readonly class GeoPoint implements GeoPointInterface {
+    /** Create an inclusive spherical circle centered on this point. */
+    public function circle(float $radius, string $unit): Circle { return new Circle($this, $radius, $unit); }
+
     private float $radLat;
     private float $radLon;
     private float $degLat;

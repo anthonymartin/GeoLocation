@@ -10,6 +10,22 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 
 /** Immutable perimeter vertices; alternative input points are snapshotted. */
 final readonly class Polygon implements PolygonInterface {
+    /** Alias for the planar, half-open containment test. */
+    public function contains(GeoPointInterface $point): bool { return $this->containsGeoPoint($point); }
+
+    /**
+     * Min/max envelope of a planar polygon; not a wrapped antimeridian envelope.
+     * Empty polygons have no envelope and throw InvalidArgumentException.
+     */
+    public function boundingBox(): Interfaces\BoundingBoxInterface {
+        if ($this->vertices === []) {
+            throw new InvalidArgumentException('An empty polygon has no bounding box.');
+        }
+        $latitudes = array_map(static fn(GeoPoint $p): float => $p->getLatitude(), $this->vertices);
+        $longitudes = array_map(static fn(GeoPoint $p): float => $p->getLongitude(), $this->vertices);
+        return new BoundingBox(min($latitudes), min($longitudes), max($latitudes), max($longitudes));
+    }
+
     /** @var list<GeoPoint> */
     private array $vertices;
 

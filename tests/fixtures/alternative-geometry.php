@@ -39,6 +39,8 @@ final readonly class OtherPoint implements GeoPointInterface {
 }
 
 final readonly class OtherPolygon implements PolygonInterface {
+    public function contains(GeoPointInterface $point): bool { return $this->containsGeoPoint($point); }
+    public function boundingBox(): BoundingBoxInterface { return (new Polygon(...$this->vertices))->boundingBox(); }
     /** @var list<OtherPoint> */
     private array $vertices;
     public function __construct(GeoPointInterface ...$vertices) {
@@ -60,6 +62,7 @@ final readonly class OtherPolygon implements PolygonInterface {
 }
 
 final readonly class OtherBox implements BoundingBoxInterface {
+    public function boundingBox(): BoundingBoxInterface { return $this; }
     public function __construct(private BoundingBox $bounds) {}
     public static function fromGeoPoint(GeoPointInterface $geopoint, mixed $distance, mixed $unit_of_measurement): self {
         return new self(BoundingBox::fromGeoPoint($geopoint, $distance, $unit_of_measurement));

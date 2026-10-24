@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AnthonyMartin\GeoLocation\Interfaces;
 
 /** An immutable sequence of perimeter vertices with planar containment. */
-interface PolygonInterface {
+interface PolygonInterface extends Region {
     public function withVertex(GeoPointInterface $point): self;
     /** @param array<array{int|float|numeric-string, int|float|numeric-string}> $vertices */
     public static function fromArray(array $vertices): self;

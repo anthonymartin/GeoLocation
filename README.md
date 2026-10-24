@@ -354,3 +354,29 @@ The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 
 Contributors: see [ARCHITECTURE.md](ARCHITECTURE.md) for layer boundaries and `composer lint`.
+
+### Regions
+
+`BoundingBox`, `Polygon`, and `Circle` implement `Interfaces\Region` with
+`contains(GeoPointInterface $point)` and `boundingBox()`. Boxes and circles include
+their boundaries; polygons keep planar, half-open edges. Polygon envelopes use
+vertex minima/maxima and do not represent antimeridian-crossing regions. An empty
+polygon has no envelope and throws `InvalidArgumentException`.
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\Interfaces\Region;
+
+$center = new GeoPoint(40.7, -74.0);
+$circle = $center->circle(5, 'km');
+$isInside = static fn(Region $region): bool => $region->contains($center);
+assert($isInside($circle));
+assert($isInside($circle->boundingBox()));
+assert($isInside($circle->boundingBox()->getPolygon()));
+```
+
+A circle tests actual spherical distance. Its bounding box also includes corners
+outside that radius. Circle centers are immutable snapshots of the supplied point.
