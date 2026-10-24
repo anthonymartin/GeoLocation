@@ -32,11 +32,14 @@
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.5"
+        "phpunit/phpunit": "^12.5",
+        "phpstan/phpstan": "^2.1"
     },
     "scripts": {
         "test": "phpunit --bootstrap vendor/autoload.php tests",
-        "test:no-bcmath": "@php -n tests/without-bcmath.php"
+        "test:no-bcmath": "@php -n tests/without-bcmath.php",
+        "analyse": "phpstan analyse --no-progress",
+        "test:readme": "@php tests/readme-examples.php"
     },
     "suggest": {
         "ext-curl": "Required only by GoogleGeocoder; geometry has no cURL dependency."

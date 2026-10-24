@@ -13,9 +13,16 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   protected float $minLat;
   protected float $maxLon;
   protected float $maxLat;
+  /** @var list<GeoPoint> */
   protected array $GeoPoints = [];
 
 
+  /**
+   * @param int|float|numeric-string $minLat
+   * @param int|float|numeric-string $minLon
+   * @param int|float|numeric-string $maxLat
+   * @param int|float|numeric-string $maxLon
+   */
   public function __construct(mixed $minLat, mixed $minLon, mixed $maxLat, mixed $maxLon, bool $inRadians=false)
   {
     foreach (array($minLat, $minLon, $maxLat, $maxLon) as $coordinate) {
@@ -40,6 +47,8 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   /**
    * Enclose a nonnegative great-circle search radius in a latitude/longitude box.
    * The box can include points farther from the center than the radius.
+   * @param int|float|numeric-string $distance
+   * @param string $unit_of_measurement
    */
   public static function fromGeoPoint(GeoPoint $geopoint, mixed $distance, mixed $unit_of_measurement): BoundingBox {
 		$radius = Earth::getRadius($unit_of_measurement);
@@ -111,7 +120,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
 
   /**
    * Perimeter corner order: SW, SE, NE, NW.
-   * @return GeoPoint[]
+   * @return list<GeoPoint>
    */
   public function getVertices(): array
   {
@@ -120,7 +129,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
 
   /**
    * Perimeter corner order: SW, SE, NE, NW.
-   * @return GeoPoint[]
+   * @return list<GeoPoint>
    */
   public function getGeoPoints(): array
   {
@@ -142,7 +151,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   /**
    * Corners in perimeter order: SW, SE, NE, NW.
    * Antimeridian-crossing boxes still require contains() for containment.
-   * @return GeoPoint[]
+   * @return list<GeoPoint>
    */
   public function getPerimeter(): array {
     return $this->getVertices();

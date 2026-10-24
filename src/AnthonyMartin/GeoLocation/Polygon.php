@@ -8,6 +8,7 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 
 class Polygon implements Interfaces\Polygon {
 
+  /** @var list<GeoPoint> */
   protected array $GeoPoints = array();
 
   public function addVertex(GeoPoint $geopoint): void {
@@ -15,7 +16,7 @@ class Polygon implements Interfaces\Polygon {
   }
 
   /**
-   * @param array $vertices expects array of arrays. eg. array(array(lat1,lon1), array(lat2, lon2))
+   * @param array<array{int|float|numeric-string, int|float|numeric-string}> $vertices
    * @return Polygon
    */
   public static function fromArray(array $vertices): Polygon {
@@ -78,7 +79,7 @@ class Polygon implements Interfaces\Polygon {
   }
 
   /**
-   * @return array
+   * @return list<GeoPoint>
    */
   public function getGeoPoints(): array
   {
@@ -86,7 +87,7 @@ class Polygon implements Interfaces\Polygon {
   }
 
   /**
-   * @return array
+   * @return list<GeoPoint>
    */
   public function getVertices(): array
   {

@@ -7,8 +7,11 @@ use AnthonyMartin\GeoLocation\Polygon as PolygonValue;
 
 interface Polygon {
     public function addVertex(GeoPoint $geopoint): void;
+    /** @param array<array{int|float|numeric-string, int|float|numeric-string}> $vertices */
     public static function fromArray(array $vertices): PolygonValue;
-    public function containsGeoPoint(GeoPoint $geopoint): bool;
+    public function containsGeoPoint(GeoPoint $p): bool;
+    /** @return list<GeoPoint> */
     public function getVertices(): array;
+    /** @return list<GeoPoint> */
     public function getGeoPoints(): array;
 }

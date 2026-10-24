@@ -197,3 +197,30 @@ Before and after: polygons with zero, one, or two vertices return `false` for
 containment, without warnings. Malformed vertices still throw. There is no new
 minimum-vertex exception to handle. Geometry still uses haversine distances,
 requires no BCMath, and preserves the validation and containment fixes from 2.x.
+
+## Compatible improvements in 3.1
+
+3.1 adds `Interfaces\Geocoder`, implemented by `GoogleGeocoder`. Depend on that
+interface when injecting an address-to-point service or supplying a test double.
+Existing calls to `(new GoogleGeocoder($apiKey))->geocode($address)` remain supported.
+
+Immutable replacements preserve initialized subclass fields, including private
+ancestor fields, without calling the constructor or `__clone()`. Object-valued
+fields retain their references, as in a shallow copy. Subclasses with metadata
+that depends on coordinates may override the protected `copyWithCoordinates()`
+hook to recompute that metadata. Uninitialized fields remain uninitialized.
+
+Interface parameter names now match the existing concrete methods:
+`BoundingBoxInterface::contains(GeoPoint $point)` and
+`Interfaces\Polygon::containsGeoPoint(GeoPoint $p)`. Use `point:` and `p:` when
+calling these methods with named arguments. Existing positional calls and concrete
+method parameter names are unchanged.
+
+`Earth::$MIN_LAT`, `$MAX_LAT`, `$MIN_LON`, and `$MAX_LON` now start with their
+radian bounds instead of `null`. They remain public and writable for compatibility.
+The bound getter methods remain authoritative and do not depend on writes to
+these legacy properties.
+
+Polygon mutation and existing interfaces' concrete factory return types are
+unchanged in 3.x. A future major version may revisit them; no migration or API
+deprecation is introduced here.

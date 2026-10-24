@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0 — Unreleased
+
+- Fix immutable point replacements losing subclass fields or requiring the subclass
+  constructor to accept two arguments. Preserve private ancestor fields and exact
+  unchanged radian values; document shallow-copy semantics and the customization hook.
+- Align containment interface parameter names with the existing implementations
+  so named-argument calls match the declared contracts.
+- Initialize Earth’s existing public latitude/longitude bounds in radians instead
+  of null; retain their writable compatibility API.
+- Add `Interfaces\Geocoder` for alternate providers and test doubles;
+  `GoogleGeocoder` implements it without changing its existing API.
+- Add precise numeric-input and collection PHPDoc types, PHPStan level-8 checks,
+  and executable README examples. Polish the quick start and API reference.
+- Keep 2.x supported as-is. Polygon mutability and existing concrete interface
+  return types remain unchanged in 3.x.
+
 ## 3.0.0 — 2026-10-24
 
 This major release changes public contracts intentionally. Read

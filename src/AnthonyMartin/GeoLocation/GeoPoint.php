@@ -14,6 +14,10 @@ readonly class GeoPoint implements Interfaces\GeoPointInterface {
     protected float $degLat;
     protected float $degLon;
 
+    /**
+     * @param int|float|numeric-string $latitude
+     * @param int|float|numeric-string $longitude
+     */
     public function __construct(mixed $latitude, mixed $longitude, bool $inRadians = false) {
         $latitude = self::normalizeCoordinate($latitude, 'Latitude',
             $inRadians ? Earth::getMINLAT() : -90, $inRadians ? Earth::getMAXLAT() : 90);
@@ -25,27 +29,76 @@ readonly class GeoPoint implements Interfaces\GeoPointInterface {
         $this->degLon = $inRadians ? rad2deg($longitude) : $longitude;
     }
 
-    /** Return a new point; the original point and its longitude are unchanged. */
+    /**
+     * Return a shallow copy with a new latitude, preserving subclass fields.
+     * @param int|float|numeric-string $latitude
+     */
     public function withLatitude(mixed $latitude, bool $inRadians = false): static {
-        if ($inRadians) {
-            $latitude = rad2deg(self::normalizeCoordinate($latitude, 'Latitude', Earth::getMINLAT(), Earth::getMAXLAT()));
-        }
-        return new static($latitude, $this->degLon);
+        $latitude = self::normalizeCoordinate($latitude, 'Latitude',
+            $inRadians ? Earth::getMINLAT() : -90, $inRadians ? Earth::getMAXLAT() : 90);
+        return $this->copyWithCoordinates(
+            $inRadians ? $latitude : deg2rad($latitude), $this->radLon,
+            $inRadians ? rad2deg($latitude) : $latitude, $this->degLon
+        );
     }
 
-    /** Return a new point; the original point and its latitude are unchanged. */
+    /**
+     * Return a shallow copy with a new longitude, preserving subclass fields.
+     * @param int|float|numeric-string $longitude
+     */
     public function withLongitude(mixed $longitude, bool $inRadians = false): static {
-        if ($inRadians) {
-            $longitude = rad2deg(self::normalizeCoordinate($longitude, 'Longitude', Earth::getMINLON(), Earth::getMAXLON()));
-        }
-        return new static($this->degLat, $longitude);
+        $longitude = self::normalizeCoordinate($longitude, 'Longitude',
+            $inRadians ? Earth::getMINLON() : -180, $inRadians ? Earth::getMAXLON() : 180);
+        return $this->copyWithCoordinates(
+            $this->radLat, $inRadians ? $longitude : deg2rad($longitude),
+            $this->degLat, $inRadians ? rad2deg($longitude) : $longitude
+        );
     }
 
+    /**
+     * Copy initialized instance fields without invoking subclass constructors or
+     * clone hooks. Object-valued fields are shared, as in a shallow clone.
+     * Subclasses with coordinate-dependent metadata may override this hook.
+     */
+    protected function copyWithCoordinates(float $radLat, float $radLon, float $degLat, float $degLon): static {
+        $reflection = new \ReflectionClass($this);
+        $copy = $reflection->newInstanceWithoutConstructor();
+        $coordinates = compact('radLat', 'radLon', 'degLat', 'degLon');
+        $copied = [];
+        // Walk each declaring class to include private ancestor fields too.
+        do {
+            foreach ($reflection->getProperties() as $property) {
+                if ($property->getDeclaringClass()->getName() !== $reflection->getName() ||
+                    $property->isStatic() || !$property->isInitialized($this)) {
+                    continue;
+                }
+                $name = $property->getName();
+                $slot = $property->isPrivate() ? $reflection->getName() . '::' . $name : $name;
+                if (isset($copied[$slot])) {
+                    continue;
+                }
+                $copied[$slot] = true;
+                $value = array_key_exists($name, $coordinates)
+                    ? $coordinates[$name] : $property->getValue($this);
+                $property->setValue($copy, $value);
+            }
+            $reflection = $reflection->getParentClass();
+        } while ($reflection !== false);
+        return $copy;
+    }
+
+    /**
+     * @param int|float|numeric-string $distance
+     * @param string $unit_of_measurement
+     */
     public function boundingBox(mixed $distance, mixed $unit_of_measurement): BoundingBox {
         return BoundingBox::fromGeoPoint($this, $distance, $unit_of_measurement);
     }
 
-    /** Great-circle distance using a spherical Earth and the haversine formula. */
+    /**
+     * Great-circle distance using a spherical Earth and the haversine formula.
+     * @param string $unit_of_measurement
+     */
     public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
         $radius = Earth::getRadius($unit_of_measurement);
         $latitudeTerm = sin(($geopoint->radLat - $this->radLat) / 2);
