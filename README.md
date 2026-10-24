@@ -607,3 +607,59 @@ allocating an oversized cover; reduce precision or explicitly raise the limit.
 Store hashes at the chosen precision, or compare prefixes of longer hashes. Bind
 `$hashes` as parameters in your own `IN` clause; keep values out of SQL text. The SQL
 and Index layers remain independent.
+
+### Polygon measurements and spherical containment
+
+```php
+<?php
+require 'vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\Polygon;
+
+$polygon = Polygon::fromArray([[0, 0], [0, 1], [1, 1], [1, 0]]);
+$areaKm2 = $polygon->area('km');
+$perimeterKm = $polygon->perimeter('km');
+$center = $polygon->centroid();
+$valid = $polygon->isValid();
+$errors = $polygon->validationErrors();
+$clockwise = $polygon->isClockwise();
+$reversed = $polygon->reversed();
+$simplified = $polygon->simplify(100); // meters
+$copy = Polygon::fromGeoPoints($polygon->getVertices());
+$wrapped = Polygon::fromArray([[-10, 170], [-10, -170], [10, -170], [10, 170]]);
+$inside = $wrapped->containsSpherical(new GeoPoint(0, 180)); // true
+```
+
+`area()` uses oriented spherical excess, summing great-circle triangle solid angles,
+and returns the smaller area in km² or mi². `perimeter()` sums haversine edge lengths.
+These use a spherical Earth, not an ellipsoid: error varies by latitude and shape,
+so **±0.3% is not a universal area guarantee**. The 1° equatorial test cell is about
+12,364 km²; a four-corner Colorado approximation is only a rough comparison with
+its surveyed border. See the [JPL spherical-polygon discussion](https://ntrs.nasa.gov/citations/20210005701).
+
+`centroid()` is the normalized 3D **vertex mean**, not an area-weighted centroid.
+It handles longitude wrapping, can lie outside concave rings, and throws for an
+empty ring or a zero resultant. Adding vertices changes the weighting.
+
+`containsSpherical()` is an inclusive winding test for simple rings enclosing less
+than a hemisphere, with minor great-circle edges. It handles poles and the date
+line and is independent of orientation. Antipodal edges and exactly hemispherical
+interiors are ambiguous and throw. Self-intersecting spherical rings are unsupported.
+`contains()`, `containsGeoPoint()` and `inPolygon()` retain planar half-open behavior.
+The polygon's `boundingBox()` is also planar: do not use it (including SQL/geohash
+candidate filters) to bound an opt-in spherical region.
+
+`isValid()` / `validationErrors()` check **planar** rings for distinct vertices,
+consecutive duplicates, zero signed area, and non-adjacent segment intersections.
+They are O(n²), do not certify spherical validity, and do not run implicitly in
+constructors. `isClockwise()` also uses planar longitude/latitude orientation.
+
+`simplify()` applies closed-ring Douglas–Peucker using spherical segment distances.
+Tolerance must be finite and nonnegative. It preserves the original when fewer
+than three vertices would remain, and leaves incomplete rings and zero tolerance
+unchanged. It does not guarantee topology preservation; validate the result when
+that matters. `reversed()` and `simplify()` return immutable values.
+
+For large rings, use the variadic constructor, `fromArray()` or `fromGeoPoints()`.
+Repeated `withVertex()` calls copy the growing array and cost O(n²) overall.
