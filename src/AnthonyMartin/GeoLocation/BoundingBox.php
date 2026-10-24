@@ -107,7 +107,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     return new BoundingBox($minLat, $minLon, $maxLat, $maxLon, true);
   }
   /**
-   * Input-type preservation is deprecated; 3.0 always returns float.
    * @return float|int|string
    */
   public function getMinLongitude()
@@ -116,7 +115,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * Input-type preservation is deprecated; 3.0 always returns float.
    * @return float|int|string
    */
   public function getMinLatitude()
@@ -125,7 +123,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * Input-type preservation is deprecated; 3.0 always returns float.
    * @return float|int|string
    */
   public function getMaxLongitude()
@@ -134,7 +131,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * Input-type preservation is deprecated; 3.0 always returns float.
    * @return float|int|string
    */
   public function getMaxLatitude()
@@ -144,7 +140,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
 
   /**
    * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
-   * @deprecated Indexed corner assumptions change in 3.0. Use named getters or getPerimeter().
    * @return GeoPoint[]
    */
   public function getVertices()
@@ -154,7 +149,6 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
 
   /**
    * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
-   * @deprecated Indexed corner assumptions change in 3.0. Use named getters or getPerimeter().
    * @return GeoPoint[]
    */
   public function getGeoPoints()
