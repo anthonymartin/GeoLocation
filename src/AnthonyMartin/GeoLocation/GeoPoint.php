@@ -23,18 +23,18 @@ class GeoPoint implements Interfaces\GeoPointInterface {
    * @return GeoPoint
    */
   public function __construct($latitude, $longitude, $inRadians=false) {
-    $latitude = self::normalizeCoordinate($latitude, 'Latitude',
+    self::normalizeCoordinate($latitude, 'Latitude',
       $inRadians ? Earth::getMINLAT() : -90, $inRadians ? Earth::getMAXLAT() : 90);
-    $longitude = self::normalizeCoordinate($longitude, 'Longitude',
+    self::normalizeCoordinate($longitude, 'Longitude',
       $inRadians ? Earth::getMINLON() : -180, $inRadians ? Earth::getMAXLON() : 180);
     if($inRadians) {
       $this->radLat = $latitude;
       $this->radLon = $longitude;
-      $this->degLat = rad2deg($latitude);
-      $this->degLon = rad2deg($longitude);
+      $this->degLat = rad2deg((float) $latitude);
+      $this->degLon = rad2deg((float) $longitude);
     } else {
-      $this->radLat = deg2rad($latitude);
-      $this->radLon = deg2rad($longitude);
+      $this->radLat = deg2rad((float) $latitude);
+      $this->radLon = deg2rad((float) $longitude);
       $this->degLat = $latitude;
       $this->degLon = $longitude;
     }
@@ -80,7 +80,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
     return (!$inRadians) ? $this->degLon : $this->radLon;
   }
   /**
-   * @return float|int
+   * @return float|int|string
    */
   public function getRadLat()
   {
@@ -88,17 +88,17 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   }
 
   /**
-   * @param float|int $radLat
+   * @param float|int|string $radLat
    */
   public function setRadLat($radLat)
   {
-    $radLat = self::normalizeCoordinate($radLat, 'Latitude', Earth::getMINLAT(), Earth::getMAXLAT());
+    self::normalizeCoordinate($radLat, 'Latitude', Earth::getMINLAT(), Earth::getMAXLAT());
     $this->radLat = $radLat;
-    $this->degLat = rad2deg($radLat);
+    $this->degLat = rad2deg((float) $radLat);
   }
 
   /**
-   * @return float|int
+   * @return float|int|string
    */
   public function getRadLon()
   {
@@ -106,13 +106,13 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   }
 
   /**
-   * @param float|int $radLon
+   * @param float|int|string $radLon
    */
   public function setRadLon($radLon)
   {
-    $radLon = self::normalizeCoordinate($radLon, 'Longitude', Earth::getMINLON(), Earth::getMAXLON());
+    self::normalizeCoordinate($radLon, 'Longitude', Earth::getMINLON(), Earth::getMAXLON());
     $this->radLon = $radLon;
-    $this->degLon = rad2deg($radLon);
+    $this->degLon = rad2deg((float) $radLon);
   }
 
   /**
@@ -128,9 +128,9 @@ class GeoPoint implements Interfaces\GeoPointInterface {
    */
   public function setDegLat($degLat)
   {
-    $degLat = self::normalizeCoordinate($degLat, 'Latitude', -90, 90);
+    self::normalizeCoordinate($degLat, 'Latitude', -90, 90);
     $this->degLat = $degLat;
-    $this->radLat = deg2rad($degLat);
+    $this->radLat = deg2rad((float) $degLat);
   }
 
   /**
@@ -146,9 +146,9 @@ class GeoPoint implements Interfaces\GeoPointInterface {
    */
   public function setDegLon($degLon)
   {
-    $degLon = self::normalizeCoordinate($degLon, 'Longitude', -180, 180);
+    self::normalizeCoordinate($degLon, 'Longitude', -180, 180);
     $this->degLon = $degLon;
-    $this->radLon = deg2rad($degLon);
+    $this->radLon = deg2rad((float) $degLon);
   }
 
   /**

@@ -74,20 +74,49 @@ class GeoPointRegressionTest extends TestCase
         $point->distanceTo($point, 'yards');
     }
 
-    public function testNumericCoordinatesAreNormalizedToFloats()
+    public function testNumericCoordinatesPreserveInputTypesAndConvertForMath()
     {
         $point = new GeoPoint('40.5', '-7.4e1');
-        $this->assertSame(40.5, $point->getLatitude());
-        $this->assertSame(-74.0, $point->getLongitude());
+        $this->assertSame('40.5', $point->getLatitude());
+        $this->assertSame('-7.4e1', $point->getLongitude());
         $this->assertSame(deg2rad(40.5), $point->getLatitude(true));
         $this->assertSame(deg2rad(-74), $point->getLongitude(true));
 
         $radians = new GeoPoint('0.5', '-1', true);
-        $this->assertSame(0.5, $radians->getRadLat());
-        $this->assertSame(-1.0, $radians->getRadLon());
+        $this->assertSame('0.5', $radians->getRadLat());
+        $this->assertSame('-1', $radians->getRadLon());
         $this->assertSame(rad2deg(0.5), $radians->getDegLat());
         $this->assertSame(rad2deg(-1), $radians->getDegLon());
-        $this->assertSame(0.0, (new GeoPoint(0, 0))->getLatitude());
+        $this->assertSame(0, (new GeoPoint(0, 0))->getLatitude());
+    }
+
+    public function testCoordinateGetterTypesMatchValidatedInputs()
+    {
+        foreach (array(1, 1.5, '1.50') as $value) {
+            $point = new GeoPoint($value, $value);
+            $this->assertSame($value, $point->getLatitude());
+            $this->assertSame($value, $point->getLongitude());
+            $this->assertSame($value, $point->getDegLat());
+            $this->assertSame($value, $point->getDegLon());
+            $box = new \AnthonyMartin\GeoLocation\BoundingBox($value, $value, $value, $value);
+            foreach (array('getMinLatitude', 'getMinLongitude', 'getMaxLatitude', 'getMaxLongitude') as $getter) {
+                $this->assertSame($value, $box->$getter());
+            }
+            foreach ($box->getVertices() as $corner) {
+                $this->assertSame($value, $corner->getLatitude());
+                $this->assertSame($value, $corner->getLongitude());
+            }
+            $point->setDegLat($value);
+            $point->setDegLon($value);
+            $this->assertSame($value, $point->getLatitude());
+            $this->assertSame($value, $point->getLongitude());
+            $point->setRadLat($value);
+            $point->setRadLon($value);
+            $this->assertSame($value, $point->getLatitude(true));
+            $this->assertSame($value, $point->getLongitude(true));
+            $this->assertSame(rad2deg((float) $value), $point->getLatitude());
+            $this->assertSame(rad2deg((float) $value), $point->getLongitude());
+        }
     }
 
     public function testConstructorsRejectInvalidTypesAndNonFiniteCoordinatesWithLibraryExceptions()
@@ -134,12 +163,12 @@ class GeoPointRegressionTest extends TestCase
     {
         $point = new GeoPoint(10, 20);
         $point->setDegLat('40.5');
-        $this->assertSame(40.5, $point->getDegLat());
+        $this->assertSame('40.5', $point->getDegLat());
         $this->assertSame(deg2rad(40.5), $point->getRadLat());
-        $this->assertSame(20.0, $point->getDegLon());
+        $this->assertSame(20, $point->getDegLon());
         $this->assertSame(deg2rad(20), $point->getRadLon());
         $point->setDegLon('-74');
-        $this->assertSame(-74.0, $point->getDegLon());
+        $this->assertSame('-74', $point->getDegLon());
         $this->assertSame(deg2rad(-74), $point->getRadLon());
         $this->assertSame(0.0, $point->distanceTo(new GeoPoint(40.5, -74), 'km'));
         $this->assertEquals((new GeoPoint(40.5, -74))->boundingBox(3, 'km'), $point->boundingBox(3, 'km'));
@@ -149,12 +178,12 @@ class GeoPointRegressionTest extends TestCase
     {
         $point = new GeoPoint(10, 20);
         $point->setRadLat('0.5');
-        $this->assertSame(0.5, $point->getRadLat());
+        $this->assertSame('0.5', $point->getRadLat());
         $this->assertSame(rad2deg(0.5), $point->getDegLat());
-        $this->assertSame(20.0, $point->getDegLon());
+        $this->assertSame(20, $point->getDegLon());
         $this->assertSame(deg2rad(20), $point->getRadLon());
         $point->setRadLon('-1');
-        $this->assertSame(-1.0, $point->getRadLon());
+        $this->assertSame('-1', $point->getRadLon());
         $this->assertSame(rad2deg(-1), $point->getDegLon());
         $this->assertSame(0.0, $point->distanceTo(new GeoPoint(0.5, -1, true), 'km'));
     }

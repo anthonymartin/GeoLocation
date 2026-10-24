@@ -18,8 +18,9 @@ Installation and compatibility
 composer require anthonymartin/geo-location:^2.1
 ```
 
-The library supports PHP 5.4 and later and requires the cURL and JSON extensions.
-BCMath is not required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
+The library supports PHP 5.4 and later. The cURL and JSON extensions are needed
+only for Google geocoding; geometry functions work without them. BCMath is not
+required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
 case-insensitively. Both `distanceTo()` and `boundingBox()` require an explicit
 unit argument; neither has a default unit. Distances use a spherical Earth
 approximation.
@@ -27,7 +28,9 @@ approximation.
 `new GeoPoint($latitude, $longitude, $inRadians = false)` takes latitude first,
 then longitude. By default the values are degrees, within ±90° latitude and
 ±180° longitude. Pass `true` as the third argument to supply radians instead.
-`GeoPoint` accepts finite numeric values and normalizes numeric strings to floats.
+`GeoPoint` accepts finite numeric values. Getters in the input unit preserve
+the original integer, float, or numeric-string value; converted coordinates
+are floats. Degree-mode `BoundingBox` getters preserve input types too.
 `getLatitude()` and `getLongitude()` return degrees; pass `true` to either getter
 for radians.
 
@@ -152,7 +155,7 @@ is added implicitly. `$point->inPolygon($polygon)` and
 `$polygon->containsGeoPoint($point)` both return a boolean.
 
 Polygons use planar ray casting: they must not cross the antimeridian and must
-have at least three vertices when tested. Boundary behavior is half-open, so
+return `false` for fewer than three vertices. Boundary behavior is half-open, so
 some edges are inside and others are outside. Use `BoundingBox::contains()` for
 inclusive box boundaries. Vertices can be added incrementally with `addVertex()`.
 
@@ -170,8 +173,14 @@ $boundingBox = $geopointA->boundingBox(5, 'mi');
 $polygon = $boundingBox->toPolygon();
 ```
 
-`toPolygon()` is an alias of `getPolygon()`. Vertices now follow the perimeter
-in SW, SE, NE, NW order; the previous version swapped the final two corners.
+`toPolygon()` is an alias of `getPolygon()`. Both build a proper ring in
+SW, SE, NE, NW order. `getPerimeter()` returns the four `GeoPoint` corners in
+that same ring order. For a single corner, use `getSouthWest()`, `getSouthEast()`,
+`getNorthWest()`, or `getNorthEast()`.
+
+`getVertices()` and `getGeoPoints()` retain the 2.0.1 order: SW, SE, NW, NE.
+That is not a perimeter; use `getPolygon()` or `getPerimeter()` when building
+polygons. Version 2.1.0 changed these indexes unintentionally; 2.1.1 restores them.
 For a box that does not cross the antimeridian, pass the returned polygon to
 `$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
 the antimeridian, use `$boundingBox->contains($geopointA)` instead.
@@ -201,8 +210,8 @@ library's `Exceptions\Exception` base. Use `ExceptionInterface` to catch both
 families.
 
 The `GeoLocation` class remains available but is deprecated in favor of
-`GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method still returns the
-complete validated Google response; `getAngular()` is zero until a bounding
+`GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method returns Google's raw, unvalidated decoded response
+(including API error statuses), or `null` on transport/JSON failure; `getAngular()` is zero until a bounding
 radius is calculated.
 
 Running Tests

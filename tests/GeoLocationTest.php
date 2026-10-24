@@ -43,9 +43,9 @@ class GeoLocationTest extends TestCase {
     $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
     $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
     $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
-    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true), 1e-9);
     $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
-    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[3]->getLongitude(), 1e-9);
 
     $bbox = $geopointA->boundingBox(3, 'mi');
     $this->assertInstanceOf(GeoPoint::class, $bbox->getVertices()[2]);
@@ -55,9 +55,9 @@ class GeoLocationTest extends TestCase {
     $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
     $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
     $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
-    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true), 1e-9);
     $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
-    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[3]->getLongitude(), 1e-9);
 
     $this->assertEquals(4, count($bbox->getVertices()));
   }

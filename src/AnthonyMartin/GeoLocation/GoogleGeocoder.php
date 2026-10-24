@@ -29,43 +29,10 @@ class GoogleGeocoder {
       throw new NoApiKeyException();
     }
 
-    $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' .
-      rawurlencode($address) . '&key=' . rawurlencode($apiKey);
-    $handle = curl_init();
-    if ($handle === false) {
-      throw new CurlErrorException('Unable to initialize cURL for Google geocoding.');
-    }
-
-    // Close before parsing or throwing response errors. Avoid finally so the
-    // runtime remains compatible with PHP 5.4.
-    try {
-      $options = array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 5,
-        CURLOPT_TIMEOUT => 10
-      );
-      foreach ($options as $option => $value) {
-        if (!curl_setopt($handle, $option, $value)) {
-          throw new CurlErrorException('Unable to configure cURL for Google geocoding: ' . curl_error($handle));
-        }
-      }
-      $body = curl_exec($handle);
-      $error = ($body === false) ? curl_error($handle) : '';
-      $httpStatus = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-    } catch (\Exception $exception) {
-      self::close($handle);
-      throw $exception;
-    }
-    self::close($handle);
-
-    if ($body === false) {
-      throw new CurlErrorException($error !== '' ? $error : 'Google geocoding request failed.');
-    }
+    list($body, $httpStatus) = self::transport($address, $apiKey);
     if ($httpStatus < 200 || $httpStatus >= 300) {
       throw new UnexpectedResponseException('Google geocoding returned HTTP status ' . $httpStatus . '.');
     }
-
     $response = json_decode($body);
     if (json_last_error() !== JSON_ERROR_NONE || !is_object($response)) {
       throw new UnexpectedResponseException('Google geocoding returned invalid JSON.');
@@ -98,6 +65,64 @@ class GoogleGeocoder {
     }
 
     return $response;
+  }
+
+  /**
+   * Return the raw decoded body, including API errors and non-object JSON.
+   * Legacy callers inspect the response themselves; transport failures are null.
+   *
+   * @return mixed
+   */
+  public static function request($address, $apiKey=null) {
+    try {
+      list($body, $httpStatus) = self::transport($address, $apiKey);
+    } catch (\Exception $exception) {
+      return null;
+    }
+    return json_decode($body);
+  }
+
+  private static function transport($address, $apiKey) {
+    if (!function_exists('curl_init')) {
+      throw new UnexpectedResponseException('Google geocoding requires the cURL extension.');
+    }
+    if (!function_exists('json_decode')) {
+      throw new UnexpectedResponseException('Google geocoding requires the JSON extension.');
+    }
+    $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' .
+      rawurlencode($address) . '&key=' . rawurlencode((string) $apiKey);
+    $handle = curl_init();
+    if ($handle === false) {
+      throw new CurlErrorException('Unable to initialize cURL for Google geocoding.');
+    }
+
+    // Close before parsing or throwing response errors. Avoid finally so the
+    // runtime remains compatible with PHP 5.4.
+    try {
+      $options = array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT => 10
+      );
+      foreach ($options as $option => $value) {
+        if (!curl_setopt($handle, $option, $value)) {
+          throw new CurlErrorException('Unable to configure cURL for Google geocoding: ' . curl_error($handle));
+        }
+      }
+      $body = curl_exec($handle);
+      $error = ($body === false) ? curl_error($handle) : '';
+      $httpStatus = curl_getinfo($handle, CURLINFO_HTTP_CODE);
+    } catch (\Exception $exception) {
+      self::close($handle);
+      throw $exception;
+    }
+    self::close($handle);
+
+    if ($body === false) {
+      throw new CurlErrorException($error !== '' ? $error : 'Google geocoding request failed.');
+    }
+    return array($body, $httpStatus);
   }
 
   private static function close(&$handle) {

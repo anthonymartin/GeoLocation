@@ -5,6 +5,22 @@ use AnthonyMartin\GeoLocation\Exceptions;
 use PHPUnit\Framework\TestCase;
 
 class PackagingRegressionTest extends TestCase {
+  public function testExistingSubclassConstructorsAndOverridesRemainCompatible() {
+    require_once __DIR__ . '/fixtures/compatibility-subclasses.php';
+    $point = new CompatibilityPoint(40, -74);
+    $box = new CompatibilityBox($point, 1);
+    $this->assertTrue($box->contains($point));
+    $this->assertSame(0.0, $point->distanceTo($point, 'km'));
+    $polygon = new CompatibilityPolygon();
+    foreach ($box->getPerimeter() as $corner) { $polygon->addVertex($corner); }
+    $this->assertTrue($point->inPolygon($polygon));
+    $this->assertSame($polygon->getVertices(), $polygon->getGeoPoints());
+    foreach (array('BoundingBoxInterface', 'GeoPointInterface', 'Polygon', 'GeoLocationInterface') as $name) {
+      $interface = new ReflectionClass('AnthonyMartin\\GeoLocation\\Interfaces\\' . $name);
+      $this->assertFalse($interface->hasMethod('__construct'));
+    }
+  }
+
   public function testUnitsAreCaseInsensitiveAndStrict() {
     foreach (array('mi', 'miles', 'MI', 'Miles') as $unit) {
       $this->assertSame(Earth::RADIUS_MI, Earth::getRadius($unit));

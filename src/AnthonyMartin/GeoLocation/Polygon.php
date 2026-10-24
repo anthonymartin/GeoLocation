@@ -46,7 +46,7 @@ class Polygon implements Interfaces\Polygon {
     $vertices = $polygon->getVertices();
     $n = count($vertices);
     if ($n < 3) {
-      throw new InvalidArgumentException('A polygon must have at least three vertices for containment.');
+      return false;
     }
     $c = 0;
     $p1 = $vertices[0];
