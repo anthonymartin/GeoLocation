@@ -1,0 +1,46 @@
+deptrac:
+  paths: [src]
+  analyser:
+    types: [class, use, function_call]
+  ignore_uncovered_internal_classes: false
+  layers:
+    - name: Core
+      collectors:
+        - type: classLike
+          value: '^AnthonyMartin\\GeoLocation\\(?!(Geodesy|Format|Sql|Index|Geocoding|Laravel)\\|GoogleGeocoder$)'
+    # Temporary namespace exception until CDZI-075 moves the adapter.
+    - name: Geocoding
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\(Geocoding\\|GoogleGeocoder$)' }
+    - name: Geodesy
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Geodesy\\' }
+    - name: Format
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Format\\' }
+    - name: Sql
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Sql\\' }
+    - name: Index
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Index\\' }
+    - name: Laravel
+      collectors:
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Laravel\\' }
+    - name: PHP
+      collectors:
+        - { type: php_internal, value: '^(Throwable|Exception|LogicException|InvalidArgumentException|RuntimeException|UnexpectedValueException|OutOfBoundsException|stdClass|Stringable|JsonSerializable|Iterator|IteratorAggregate|Traversable|Countable|Generator)$' }
+    - name: Transport
+      collectors:
+        - { type: classLike, value: '^CurlHandle$' }
+    - name: PSR
+      collectors:
+        - { type: interface, value: '^Psr\\' }
+  ruleset:
+    Core: [PHP]
+    Geodesy: [Core, PHP, PSR]
+    Format: [Core, PHP, PSR]
+    Sql: [Core, PHP, PSR]
+    Index: [Core, PHP, PSR]
+    Geocoding: [Core, PHP, PSR, Transport]
+    Laravel: [Core, PHP, PSR]

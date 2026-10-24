@@ -40,6 +40,9 @@ class GoogleGeocoder implements Interfaces\Geocoder {
       throw new UnexpectedResponseException($message);
     }
     if (!isset($response->results) || !is_array($response->results) ||
+        !isset($response->results[0]) || !is_object($response->results[0]) ||
+        !isset($response->results[0]->geometry) || !is_object($response->results[0]->geometry) ||
+        !isset($response->results[0]->geometry->location) || !is_object($response->results[0]->geometry->location) ||
         !isset($response->results[0]->geometry->location->lat) ||
         !isset($response->results[0]->geometry->location->lng)) {
       throw new UnexpectedResponseException('Google geocoding response has no valid first result.');
