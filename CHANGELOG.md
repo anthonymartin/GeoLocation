@@ -6,9 +6,10 @@
   `GeoLocation`/interface and geocoding, mutable point setters, indexed box
   corner assumptions, input-type-preserving coordinate getters, and the
   library base of `InvalidArgumentException`.
-- Announce native types and a modern PHP minimum for 3.0. Keep PHP 5.4 support
+- Announce native types and a PHP 8.3 minimum for 3.0. Keep PHP 5.4 support
   and every 2.1.1 runtime behavior on the `2.x` maintenance branch. These are
   docblock and documentation deprecations only, with no runtime warnings.
+- Maintain 2.x for security and bug fixes for 12 months after 3.0.0 ships.
 - Keep incomplete-polygon containment returning `false` and keep constructors
   out of interfaces in both release lines.
 

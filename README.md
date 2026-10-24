@@ -218,6 +218,7 @@ radius is calculated.
 Preparing for 3.0
 --------
 The `2.x` maintenance branch retains PHP 5.4 compatibility and all 2.1.1 behavior.
+It receives security and bug fixes for 12 months after 3.0.0 ships.
 Version 2.1.2 adds documentation-only deprecations; it emits no runtime warnings.
 Before upgrading to 3.0:
 
@@ -237,7 +238,7 @@ Before upgrading to 3.0:
 - Catch `ExceptionInterface` for all library errors. In 3.0 the library's
   `InvalidArgumentException` extends PHP's `\InvalidArgumentException`, rather
   than the library's `Exceptions\Exception`.
-- Plan for a modern PHP runtime and native method/return types in 3.0;
+- Plan for PHP 8.3 or later and native method/return types in 3.0;
   subclasses and interface implementations must match those signatures.
 
 Incomplete polygons continue to return `false`, and interfaces continue to
