@@ -31,16 +31,23 @@ $traverser=new PhpParser\NodeTraverser(new class extends PhpParser\NodeVisitorAb
     }
 });
 
-$readme = file_get_contents(__DIR__ . '/../README.md');
-preg_match_all('/```php\s*\n(.*?)\n```/s', $readme, $matches);
-if ($matches[1] === []) {
-    throw new RuntimeException('No PHP examples found in README.');
+$examples = [];
+$root = dirname(__DIR__);
+foreach (array_merge([$root . '/README.md', $root . '/UPGRADE-3.0.md'], glob($root . '/docs/*.md')) as $document) {
+    preg_match_all('/```php\s*\n(.*?)\n```/s', file_get_contents($document), $matches);
+    foreach ($matches[1] as $index => $example) {
+        if (!str_contains($example, 'vendor/autoload.php')) {
+            throw new RuntimeException(basename($document) . ' example ' . ($index + 1) . ' has no autoloader.');
+        }
+        $examples[] = [basename($document) . ' example ' . ($index + 1), $example];
+    }
 }
+if ($examples === []) { throw new RuntimeException('No PHP documentation examples found.'); }
 set_error_handler(static function (int $severity, string $message, string $file, int $line): never {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 try {
-    foreach ($matches[1] as $index => $example) {
+    foreach ($examples as [$label, $example]) {
 
         $example = str_replace("__DIR__ . '/vendor/autoload.php'",
             var_export(__DIR__ . '/../vendor/autoload.php', true), $example);
@@ -51,7 +58,7 @@ try {
             try {
                 (static function (string $file): void { require $file; })($path);
             } catch (Throwable $error) {
-                throw new RuntimeException('README example ' . ($index + 1) . ' failed.', 0, $error);
+                throw new RuntimeException($label . ' failed.', 0, $error);
             } finally {
                 ob_end_clean();
             }
@@ -62,4 +69,4 @@ try {
 } finally {
     restore_error_handler();
 }
-printf("%d README examples passed on PHP %s.\n", count($matches[1]), PHP_VERSION);
+printf("%d documentation examples passed on PHP %s.\n", count($examples), PHP_VERSION);

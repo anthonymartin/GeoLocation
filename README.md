@@ -1,400 +1,68 @@
 # GeoLocation for PHP
 
-Geographic coordinates, great-circle distances, bounding boxes, polygons, and
-Google geocoding for PHP 8.3+. Geometry works without optional extensions.
-
-## Installation and compatibility
+Typed, immutable geographic points and polygons for PHP 8.3+: distances, regions,
+ellipsoidal geodesics, SQL proximity filters, GeoJSON/WKT, geohashes and geocoding.
+Geometry is pure PHP, with no runtime Composer dependencies or optional extensions.
 
 ```bash
 composer require anthonymartin/geo-location:^3.0
 ```
 
-The library requires PHP 8.3 or later. Geometry needs neither cURL nor BCMath.
-Geocoding uses cURL by default or an injected PSR-18 client; JSON is built into PHP.
-Upgrading from 2.x? Read [UPGRADE-3.0.md](UPGRADE-3.0.md) first. Applications on
-`^2.0` stay on 2.x, which retains PHP 5.4 support and receives security and bug
-fixes alongside 3.x, with no scheduled end-of-support date.
+**2.x remains supported as-is**, including PHP 5.4, with security and bug fixes
+and no scheduled end-of-support date. `^2.0` stays on 2.x. Moving to 3.0 is optional;
+read the [migration guide](UPGRADE-3.0.md) before changing your constraint.
 
-## Quick start
+## Five examples
+
+Save each example in your application's root directory, beside `vendor/`.
+Coordinates are **latitude, longitude** in degrees. Units are explicit: `km`,
+`kilometers`, `mi` or `miles`, case-insensitively. Numeric coordinate strings are
+accepted; getters return floats. Invalid or non-finite coordinates throw.
+
+### Distance and immutable coordinates
 
 ```php
 <?php
-
-require_once __DIR__ . '/vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use AnthonyMartin\GeoLocation\GeoPoint;
 
-$original = new GeoPoint(40.5, -74.4);
-$moved = $original->withLatitude(41.0)->withLongitude(-73.5);
-$distanceKm = $original->distanceTo($moved, 'km');
-$nearby = $original->boundingBox(5, 'km')->contains($moved);
-// $original remains (40.5, -74.4); $moved is (41.0, -73.5).
+$start = new GeoPoint(52.205, 0.119);
+$end = new GeoPoint(48.857, 2.351);
+$kilometers = $start->distanceTo($end, 'km'); // about 404.3 km
+$moved = $start->withLatitude(53); // $start is unchanged
 ```
 
-## Coordinates and units
-
-Distances accept `km`, `kilometers`, `mi`, or `miles`, case-insensitively.
-`distanceTo()` and `boundingBox()` require an explicit unit and use a spherical
-Earth approximation.
-
-`new GeoPoint($latitude, $longitude, $inRadians = false)` takes latitude first,
-then longitude. Degrees must be within ±90° latitude and ±180° longitude; pass
-`true` as the third argument for radians. Finite integers, floats, and numeric
-strings are accepted and normalized to floats. All coordinate getters return
-floats. `getLatitude()` and `getLongitude()` return degrees; pass `true` for radians.
-
-`GeoPoint` is final and readonly. To change a coordinate, assign
-the new point returned by `withLatitude()` or `withLongitude()`; the original
-point remains unchanged. Both methods accept `true` as their second argument
-for radian input.
-
-## API at a glance
-
-`Number` below means a finite integer, float, or numeric string. Coordinates
-must also fall within the latitude/longitude bounds. Invalid inputs throw library
-exceptions; accepting numeric strings does not mean accepting booleans or null.
-
-| API | Returns | Notes |
-| --- | --- | --- |
-| `new GeoPoint(Number $latitude, Number $longitude, bool $inRadians = false)` | `GeoPoint` | Latitude first; immutable. |
-| `$point->getLatitude(bool $inRadians = false)` / `getLongitude(...)` | `float` | Degrees by default. |
-| `$point->withLatitude(Number $latitude, bool $inRadians = false)` / `withLongitude(...)` | `GeoPoint` | New validated point; original unchanged. |
-| `$point->distanceTo(GeoPointInterface $geopoint, string $unit_of_measurement)` | `float` | Explicit unit; spherical approximation. |
-| `$point->boundingBox(Number $distance, string $unit_of_measurement)` | `BoundingBox` | Nonnegative search radius. |
-| `$box->contains(GeoPointInterface $point)` | `bool` | Inclusive boundaries; supports antimeridian crossing. |
-| `Polygon::fromArray(array $vertices)` | `Polygon` | `[latitude, longitude]` pairs in perimeter order. |
-| `$point->inPolygon(PolygonInterface $polygon)` / `$polygon->containsGeoPoint(GeoPointInterface $point)` | `bool` | Planar, half-open boundaries. |
-| `$box->getPerimeter()` / `$box->getVertices()` / `$polygon->getVertices()` | `list<GeoPoint>` | Box order: SW, SE, NE, NW. |
-| `$box->getPolygon()` / `$box->toPolygon()` | `Polygon` | New immutable polygon. |
-| `$polygon->withVertex(GeoPointInterface $point)` | `Polygon` | New polygon; appends a coordinate snapshot. |
-| `$geocoder->geocode(string $address)` | `GeoPointInterface` | Google returns `GeoPoint`; other providers may return their own point type. |
-
-Interface names in this table live in `AnthonyMartin\GeoLocation\Interfaces`.
-The table describes accepted input types. Numeric inputs and units retain native
-`mixed` parameters so invalid values receive descriptive library exceptions.
-Public methods declare native return types; collection element types and numeric
-inputs have precise PHPDoc annotations checked by PHPStan.
-
-## Examples
-
-These examples use the 3.0 API. Save each PHP example in your application's
-root directory, beside `vendor/`, after installing the package. Replace the
-API-key placeholder in geocoding examples with your Google API key.
-
-### Distance between points
+### Bearings and destinations
 
 ```php
 <?php
-
-require_once __DIR__ . '/vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use AnthonyMartin\GeoLocation\GeoPoint;
 
-$geopointA = new GeoPoint(40.5187154, -74.4120953);
-$geopointB = new GeoPoint(40.65, -73.95);
-$distance = $geopointA->distanceTo($geopointB, 'miles'); // approximately 25.8886 miles
+$start = new GeoPoint(52.205, 0.119);
+$destination = $start->destination(10, 90, 'km'); // 10 km east
+$bearing = $start->bearingTo($destination);
+$midpoint = $start->midpointTo($destination);
 ```
 
-### Geocoding with Nominatim
-
-Geocoders live in `AnthonyMartin\GeoLocation\Geocoding`. Nominatim needs no API key;
-supply your application's User-Agent and a real contact email. For the public OSM
-server, read the [usage policy](https://operations.osmfoundation.org/policies/nominatim/):
-limit the **whole application to at most one request per second**, cache repeated
-lookups, display OpenStreetMap attribution, and do not use it for autocomplete or
-systematic/bulk scraping. Choose a self-hosted/commercial endpoint for heavier use.
-The `endpoint` constructor option lets you switch services without library changes.
-Rate limiting, caching and retries belong in your application's HTTP client wrapper.
+### Bounding boxes
 
 ```php
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\Geocoding\NominatimGeocoder;
-
-$geocoder = new NominatimGeocoder('YourApplication/1.0', 'you@example.com');
-$point = $geocoder->geocode('London');
-// For repeated lookups, enforce the limit through your shared client wrapper.
-```
-
-Replace the identification values with your own before using the public service.
-`geocode()` returns the first `GeoPointInterface`, or throws `AddressNotFoundException`.
-`geocodeAll()` returns candidate results, or an empty array; `reverse($point)` returns
-an address result for the closest suitable object, which may differ from the requested
-coordinate. `GeocodingResult` is an immutable snapshot with `point`, `formattedAddress`,
-`components`, `partialMatch`, and `raw` fields and corresponding interface getters.
-Keep provider attribution from the raw payload where required.
-
-### Google geocoding
-
-Google requires an API key and [Geocoding API setup](https://developers.google.com/maps/documentation/geocoding/get-api-key).
-
-```php
-<?php
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\Geocoding\GoogleGeocoder;
-
-$geocoder = new GoogleGeocoder('google-api-key-goes-here', region: 'us', language: 'en');
-$point = $geocoder->geocode('New York, NY 10001');
-$results = $geocoder->geocodeAll('New York');
-$address = $geocoder->reverse($point);
-```
-
-Optional `components: ['country' => 'US']` supplies forward-geocoding filters.
-Partial matches are exposed in results. HTTP 429 and Google's `OVER_QUERY_LIMIT`
-throw `RateLimitedException`. Malformed responses throw `UnexpectedResponseException`;
-transport failures remain in the `CurlErrorException` family. All implement the
-library's `ExceptionInterface`. The old root `GoogleGeocoder` name is a compatibility
-alias deprecated only in 3.x, for removal in 4.0.
-
-### HTTP injection and test doubles
-
-Default geocoding uses native cURL with 5-second connection and 10-second total
-timeouts. It needs no Composer runtime dependency. Alternatively inject a PSR-18
-client and PSR-17 request factory (`client:` and `requestFactory:`); configure
-that client's own timeouts. Guzzle or Symfony's PSR-18 adapter are suitable choices.
-Their dependencies are optional Composer suggestions.
-
-The library also supplies `Geocoding\CurlClient`, a PSR-18 adapter for callers
-who install `psr/http-client`, `psr/http-factory` and a PSR-17 implementation
-such as `nyholm/psr7`. It accepts a response factory and an optional stream factory (inferred when the response
-factory implements both interfaces); providers accept the same
-factory's request interface. Missing PSR packages produce a clear exception when
-loading CurlClient. The dependency-free default uses the underlying native transport.
-HTTP 4xx/5xx responses are returned by CurlClient as required by PSR-18; the provider
-then maps their statuses. It does not follow redirects automatically.
-
-Applications can depend on `Interfaces\Geocoder` and `GeocodingResultInterface`.
-Use the shipped in-memory provider for deterministic tests:
-
-```php
-<?php
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Geocoding\Testing\ArrayGeocoder;
-
-$geocoder = new ArrayGeocoder(['Office' => new GeoPoint(40.5, -74.4)]);
-$point = $geocoder->geocode('Office');
-$address = $geocoder->reverse($point);
-assert($address->getFormattedAddress() === 'Office');
-```
-
-### Bounding box coordinates
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use AnthonyMartin\GeoLocation\GeoPoint;
 
-$geopointA = new GeoPoint(40.5187154, -74.4120953);
-$boundingBox = $geopointA->boundingBox(3, 'miles');
-$maxLatitude = $boundingBox->getMaxLatitude();
-$maxLongitude = $boundingBox->getMaxLongitude();
-$minLatitude = $boundingBox->getMinLatitude();
-$minLongitude = $boundingBox->getMinLongitude();
-
+$center = new GeoPoint(40.7, -74.0);
+$box = $center->boundingBox(5, 'km');
+$inside = $box->contains(new GeoPoint(40.71, -74.01));
+$southWest = $box->getSouthWest();
+$corners = $box->getPerimeter(); // SW, SE, NE, NW
 ```
 
-`boundingBox($distance, $unit_of_measurement)` returns a `BoundingBox`. The
-distance is a nonnegative search radius, not the box's width or height. The box
-encloses that radius and can also contain points farther away; use `distanceTo()`
-when you need to check the distance itself. Box coordinate getters return degrees.
-
-### Bounding box containment
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-
-$geopointA = new GeoPoint(40.5187154, -74.4120953);
-$boundingBox = $geopointA->boundingBox(3, 'miles');
-if ($boundingBox->contains($geopointA)) {
-    echo "GeoPoint is in the bounding box!";
-}
-```
-
-`contains()` includes every edge and corner, handles boxes crossing ±180°,
-and includes the center of a zero-distance box. Use it for bounding-box checks.
-
-### Polygon containment
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Polygon;
-
-$geopointA = new GeoPoint(40.5187154, -74.4120953);
-$polygon = Polygon::fromArray([
-    [40.50, -74.45],
-    [40.50, -74.35],
-    [40.55, -74.35],
-    [40.55, -74.45],
-]);
-if ($geopointA->inPolygon($polygon)) {
-    echo "GeoPoint is in Polygon!";
-}
-```
-
-`Polygon::fromArray(array $vertices)` accepts `[latitude, longitude]` pairs in
-degrees, ordered around the perimeter, and returns a `Polygon`. The closing edge
-is added implicitly. `$point->inPolygon($polygon)` and
-`$polygon->containsGeoPoint($point)` both return a boolean.
-
-Polygons use planar ray casting and must not cross the antimeridian. Containment
-returns `false` for fewer than three vertices. Boundary behavior is half-open, so
-some edges are inside and others are outside. Use `BoundingBox::contains()` for
-inclusive box boundaries.
-
-`Polygon` is a final readonly value. Replace mutation with `withVertex()` and
-capture the returned polygon. The original polygon and its vertices stay unchanged.
-The constructor accepts points directly: `new Polygon($pointA, $pointB, $pointC)`.
-Coordinates from alternative point implementations are snapshotted on input,
-so later changes to those objects cannot change the polygon.
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Polygon;
-
-$empty = new Polygon();
-$triangle = $empty->withVertex(new GeoPoint(0, 0))
-    ->withVertex(new GeoPoint(0, 4))
-    ->withVertex(new GeoPoint(4, 0));
-// $empty still has no vertices; $triangle has three.
-```
-
-### Box corners and polygons
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-
-$geopointA = new GeoPoint(40.5187154, -74.4120953);
-$boundingBox = $geopointA->boundingBox(5, 'mi');
-$polygon = $boundingBox->toPolygon();
-```
-
-`toPolygon()` is an alias of `getPolygon()`. Both build a proper ring in
-SW, SE, NE, NW order. `getPerimeter()` returns the four `GeoPoint` corners in
-that same ring order. For a single corner, use `getSouthWest()`, `getSouthEast()`,
-`getNorthWest()`, or `getNorthEast()`.
-
-`getVertices()` and `getGeoPoints()` also return SW, SE, NE, NW perimeter order
-in 3.0. Use named getters when selecting individual corners; 2.x used a different
-index order (SW, SE, NW, NE).
-For a box that does not cross the antimeridian, pass the returned polygon to
-`$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
-the antimeridian, use `$boundingBox->contains($geopointA)` instead.
-
-## Interfaces and alternative implementations
-
-Geometry accepts `GeoPointInterface` and `PolygonInterface` inputs. A point from
-an alternative geocoder can be passed directly to `distanceTo()`,
-`BoundingBox::fromGeoPoint()`, `contains()`, and polygon construction.
-
-Interface factories return `self`; geometry results use `GeoPointInterface`,
-`PolygonInterface`, and `BoundingBoxInterface`. Implementations can return their
-own types without extending this library's concrete classes. The bundled classes
-retain precise concrete return types where appropriate. Interface constructors
-are unconstrained. `PolygonInterface` replaces the old `Interfaces\Polygon` name.
-
-All providers must honor finite coordinate/range and collection contracts.
-`GeoPointInterface` does not force storage immutability; the bundled `GeoPoint`
-is readonly, and `Polygon` snapshots alternative inputs. See
-[the migration guide](UPGRADE-3.0.md) for the updated signatures.
-
-## Exceptions
-
-All library exceptions implement `AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface`:
-
-```php
-<?php
-
-require_once __DIR__ . '/vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\Geocoding\GoogleGeocoder;
-
-try {
-    $point = (new GoogleGeocoder('your-api-key'))->geocode('New York');
-} catch (\AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface $error) {
-    echo $error->getMessage();
-}
-```
-
-`Exceptions\InvalidArgumentException` extends PHP's `\InvalidArgumentException`;
-`InvalidUnitException` extends the library argument exception. Other library
-exception classes retain the `Exceptions\Exception` base. Catch
-`ExceptionInterface` for both families. `CurlErrorException` extends
-`UnexpectedResponseException`, so geocoding failure catches include transport errors.
-Native PHP argument/type errors follow PHP's normal `TypeError` behavior.
-
-The legacy `GeoLocation` class, `GeoLocationInterface`, point setters, and
-`GeoPoint::fromAddress()` were removed. Their replacements and native interface
-signatures are described in [UPGRADE-3.0.md](UPGRADE-3.0.md).
-
-## Development
-
-Run these commands from the root of a repository checkout on PHP 8.3 or later:
-
-```bash
-composer install
-composer test
-composer test:no-bcmath
-composer test:readme
-composer lint
-```
-
-CI tests PHP 8.3, 8.4, and 8.5, including geometry installation without cURL.
-PHPStan checks all library source at maximum level without a baseline. README examples
-are also executed with mocked geocoding.
-Geocoding tests use local response fixtures and do not require an API key.
-The `2.x` branch retains its separate PHP 5.4–8.5 compatibility suite.
-
-## Credits and license
-
-This is a collection of PHP classes written by Anthony Martin. Some of GeoLocation.php was derived from Java code that was originally published at
-<a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
-http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>.<br />
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-Copyright (c) 2019 Anthony Martin
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-Contributors: see [ARCHITECTURE.md](ARCHITECTURE.md) for layer boundaries and `composer lint`.
-
-### Regions
-
-`BoundingBox`, `Polygon`, and `Circle` implement `Interfaces\Region` with
-`contains(GeoPointInterface $point)` and `boundingBox()`. Boxes and circles include
-their boundaries; polygons keep planar, half-open edges. Polygon envelopes use
-vertex minima/maxima and do not represent antimeridian-crossing regions. An empty
-polygon has no envelope and throws `InvalidArgumentException`.
+### Circles and regions
 
 ```php
 <?php
@@ -403,212 +71,13 @@ require 'vendor/autoload.php';
 use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\Interfaces\Region;
 
-$center = new GeoPoint(40.7, -74.0);
-$circle = $center->circle(5, 'km');
-$isInside = static fn(Region $region): bool => $region->contains($center);
-assert($isInside($circle));
-assert($isInside($circle->boundingBox()));
-assert($isInside($circle->boundingBox()->getPolygon()));
+$circle = (new GeoPoint(40.7, -74.0))->circle(5, 'km');
+$check = static fn(Region $region): bool => $region->contains(new GeoPoint(40.71, -74.01));
+$inside = $check($circle);
+$envelope = $circle->boundingBox();
 ```
 
-A circle tests actual spherical distance. Its bounding box also includes corners
-outside that radius. Circle centers are immutable snapshots of the supplied point.
-
-`Earth::RADIUS_KM` and `RADIUS_MI` are typed spherical radii; `WGS84_A` (meters)
-and `WGS84_F` describe the reference ellipsoid. Use `Earth::getMINLAT()` /
-`getMAXLAT()` / `getMINLON()` / `getMAXLON()` for radian bounds. The old writable
-bound properties are now typed floats and deprecated for removal in 4.0. This
-deprecation applies only to 3.x; the supported 2.x APIs are unchanged.
-
-### Spherical navigation
-
-`bearingTo()` and `finalBearingTo()` return degrees clockwise from north in
-[0, 360). `destination()` accepts a nonnegative distance and any finite bearing;
-`midpointTo()` and `interpolate($to, $fraction)` follow the shortest great-circle
-arc. Fractions must be in [0, 1]. Coincident and antipodal bearings are undefined
-and throw `InvalidArgumentException`; antipodal interpolation also throws.
-At the north pole initial bearing is south (180°), at the south pole north (0°).
-A destination from a pole uses the starting longitude to orient its local tangent.
-These are spherical calculations using the same Earth radii as `distanceTo()`.
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-
-$cambridge = new GeoPoint(52.205, 0.119);
-$paris = new GeoPoint(48.857, 2.351);
-$bearing = $cambridge->bearingTo($paris); // approximately 156.167 degrees
-$destination = $cambridge->destination(100, $bearing, 'km');
-$halfway = $cambridge->midpointTo($paris);
-```
-
-The tests use [Chris Veness's spherical reference](https://www.movable-type.co.uk/scripts/latlong.html)
-and 500 deterministic random round trips checked to within one millimeter.
-
-### Accuracy and ellipsoidal geodesics
-
-Spherical distances are fast but can differ from ellipsoidal distances by roughly
-0.5%. Opt in to `Geodesy\Vincenty` for WGS-84 distances and initial/final bearings:
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Geodesy\Vincenty;
-
-$solver = new Vincenty();
-$start = new GeoPoint(52.205, 0.119);
-$end = new GeoPoint(48.857, 2.351);
-$result = $solver->inverse($start, $end);
-$kilometers = $result->distance('km');
-$destination = $solver->direct($start, $result->distanceMeters, $result->initialBearing);
-```
-
-`Geodesic` is a swappable solver contract. `Ellipsoid` defaults to WGS-84; use
-`new Ellipsoid(...Ellipsoid::GRS80)` or supply semi-major axis (meters) and
-flattening. `GeodesicResult` contains meters and bearings in [0, 360); coincident
-endpoints use zero for all three values. Miles convert using exactly 1609.344 m.
-
-Vincenty has a 200-iteration cap and throws `GeodesicConvergenceException` when
-it cannot converge. Its inverse also rejects points within **2° of the antipode**:
-series truncation can spoil bearing accuracy there even if iteration converges.
-There is no silent spherical fallback. Direct solutions remain available for those
-routes. Karney's solver is not included in this release. The checked WGS-84 sample
-meets 1 mm distance and 1e-8° bearing tolerances in the supported inverse domain;
-all 1,000 direct cases meet 1 mm. Accuracy is not guaranteed for extreme flattening.
-
-References: [Vincenty's equations](https://geodesy.noaa.gov/PUBS_LIB/inverse.pdf)
-and [Karney's published test data](https://sourceforge.net/projects/geographiclib/files/testdata/).
-
-### SQL store locator
-
-`Sql\NearbyQuery` builds SQL and bindings for MySQL, PostgreSQL and SQLite. It
-never opens a connection. Boxes are exact, circles add a haversine radius test,
-and polygon/custom-region filters return **bounding-box candidates only**;
-`requiresPostFiltering()` tells you to apply the region's `contains()` in PHP.
-Column names are validated and quoted, and coordinates are always parameters.
-
-This complete example uses an in-memory SQLite database:
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Sql\NearbyQuery;
-use AnthonyMartin\GeoLocation\Sql\SqliteDialect;
-
-$pdo = new PDO('sqlite::memory:');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$pdo->exec('CREATE TABLE places (id INTEGER PRIMARY KEY, name TEXT, lat REAL, lng REAL)');
-$insert = $pdo->prepare('INSERT INTO places VALUES (?, ?, ?, ?)');
-$insert->execute([1, 'Downtown', 40.71, -74.01]);
-$insert->execute([2, 'Far away', 41.0, -75.0]);
-$center = new GeoPoint(40.7, -74.0);
-$query = new NearbyQuery(new SqliteDialect(), named: true);
-$distance = $query->distanceExpression($center, 'km');
-$nearby = $query->within($center->circle(5, 'km'));
-$statement = $pdo->prepare('SELECT *, '.$distance->sql().' AS distance_km FROM places WHERE '
-    .$nearby->sql().' ORDER BY distance_km LIMIT 10');
-$statement->execute(array_merge($distance->bindings(), $nearby->bindings()));
-$places = $statement->fetchAll(PDO::FETCH_ASSOC);
-assert(count($places) === 1);
-```
-
-Use `within($circle->boundingBox())` for a box-only query. Positional `?` bindings
-are the default; merge their arrays in SQL occurrence order. Named bindings are
-unique across calls on one builder; give separate builders different
-`parameterPrefix` values if combining their fragments in one statement. A named
-placeholder occurs only once, so native PDO prepares work without emulation.
-Both ±180° spellings of the antimeridian are handled.
-
-SQLite must have [math functions enabled](https://www.sqlite.org/lang_mathfunc.html)
-(or equivalent functions registered by your application). Set `atan2: true` to
-use `2*ATAN2` rather than `2*ASIN`; it still requires SIN, COS, RADIANS, POWER and
-SQRT. All variants clamp rounding errors before inverse trigonometry. Store valid,
-finite coordinates in your database. Optional integration tests use
-`GEOLOCATION_MYSQL_DSN` / `GEOLOCATION_POSTGRES_DSN`, with
-`GEOLOCATION_DB_USER` and `GEOLOCATION_DB_PASSWORD` when needed.
-
-### GeoJSON and WKT
-
-`Format\GeoJson` and `Format\Wkt` convert points and outer polygon rings without
-I/O. Both use **longitude first**; `new GeoPoint()` takes latitude first.
-GeoJSON `encode()` returns an array; `encodeToString()` returns JSON text.
-Decoders accept only 2D points and one closed polygon ring. They reject holes,
-3D positions, unsupported geometry types and malformed data with library exceptions.
-Feature wrappers are deliberately unsupported; pass their geometry explicitly.
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Format\GeoJson;
-use AnthonyMartin\GeoLocation\Format\Wkt;
-
-$point = new GeoPoint(40.7, -74.0);
-$geojson = GeoJson::encodeToString($point->circle(5, 'km'), segments: 64);
-$decoded = GeoJson::decode($geojson);
-$wkt = Wkt::encode($point); // POINT (-74.0 40.7)
-```
-
-Return `$geojson` with `Content-Type: application/geo+json`; in a Leaflet client,
-pass the parsed response to `L.geoJSON(data).addTo(map)`.
-
-Boxes become closed five-position rings. Circles become polygon approximations
-(3–10,000 segments; default 64); GeoJSON includes a bounding box. Wrapped boxes
-and circles are cut at ±180° and can emit **MultiPolygon** for correct map display;
-their RFC 7946 `bbox` may have west greater than east. Decoding MultiPolygon is
-not supported, so those outputs are intended for map clients. Polar circle caps
-include the pole. Zero-radius circles become points. Circle approximation requires
-a radius smaller than a hemisphere; unrepresentably small rings throw.
-
-Plain polygons retain their planar edges and min/max envelopes. WKT supports only
-POINT and single-ring POLYGON, so wrapped shapes requiring multiple parts throw.
-WKT has no embedded CRS/SRID support. Neither codec silently drops holes or altitude.
-
-### Geohash indexing
-
-`Index\Geohash` supplies 1–12-character base32 hashes, full-precision cell centers,
-cell boxes, and eight neighbors. It has no native extension dependency. H3 is outside
-this package's scope. Neighbor keys are `N`, `NE`, `E`, `SE`, `S`, `SW`, `W`, `NW`;
-they follow conventional geohash grid wrapping at the antimeridian and between the
-top and bottom rows at the poles.
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Index\Geohash;
-
-$point = new GeoPoint(42.6, -5.6);
-$hash = Geohash::encode($point, 5); // ezs42
-$center = Geohash::decode($hash);
-$cell = Geohash::decodeBox($hash);
-$neighbors = Geohash::neighbors($hash);
-$circle = $point->circle(2, 'km');
-$precision = Geohash::precisionForRadius(2, 'km');
-$hashes = Geohash::cover($circle, $precision);
-```
-
-`precisionForRadius()` chooses the **finest** precision whose equatorial cell spans
-at least the diameter, falling back to 1 for large radii and 12 for zero. This is a
-starting heuristic; high-latitude cells are narrower. Use `cover()` for coverage.
-It returns exactly the cells intersecting a closed box, including boundary-touching
-cells and ±180° aliases; circles and polygons use their bounding envelopes, so apply
-`contains()` to candidates afterward. The default `maxCells: 100000` throws before
-allocating an oversized cover; reduce precision or explicitly raise the limit.
-
-Store hashes at the chosen precision, or compare prefixes of longer hashes. Bind
-`$hashes` as parameters in your own `IN` clause; keep values out of SQL text. The SQL
-and Index layers remain independent.
-
-### Polygon measurements and spherical containment
+### Polygons
 
 ```php
 <?php
@@ -618,48 +87,36 @@ use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\Polygon;
 
 $polygon = Polygon::fromArray([[0, 0], [0, 1], [1, 1], [1, 0]]);
+$inside = $polygon->contains(new GeoPoint(0.5, 0.5));
 $areaKm2 = $polygon->area('km');
 $perimeterKm = $polygon->perimeter('km');
-$center = $polygon->centroid();
-$valid = $polygon->isValid();
-$errors = $polygon->validationErrors();
-$clockwise = $polygon->isClockwise();
-$reversed = $polygon->reversed();
-$simplified = $polygon->simplify(100); // meters
-$copy = Polygon::fromGeoPoints($polygon->getVertices());
-$wrapped = Polygon::fromArray([[-10, 170], [-10, -170], [10, -170], [10, 170]]);
-$inside = $wrapped->containsSpherical(new GeoPoint(0, 180)); // true
+$reversed = $polygon->reversed(); // $polygon is unchanged
 ```
 
-`area()` uses oriented spherical excess, summing great-circle triangle solid angles,
-and returns the smaller area in km² or mi². `perimeter()` sums haversine edge lengths.
-These use a spherical Earth, not an ellipsoid: error varies by latitude and shape,
-so **±0.3% is not a universal area guarantee**. The 1° equatorial test cell is about
-12,364 km²; a four-corner Colorado approximation is only a rough comparison with
-its surveyed border. See the [JPL spherical-polygon discussion](https://ntrs.nasa.gov/citations/20210005701).
+Point distances use a sphere. Boxes and circles include their boundaries; boxes
+handle the antimeridian. Polygon `contains()` is planar with half-open boundaries.
+Use `containsSpherical()` explicitly for minor great-circle rings crossing the date
+line or enclosing a pole. See the guides for geometric limits and accuracy.
 
-`centroid()` is the normalized 3D **vertex mean**, not an area-weighted centroid.
-It handles longitude wrapping, can lie outside concave rings, and throws for an
-empty ring or a zero resultant. Adding vertices changes the weighting.
+## Guides
 
-`containsSpherical()` is an inclusive winding test for simple rings enclosing less
-than a hemisphere, with minor great-circle edges. It handles poles and the date
-line and is independent of orientation. Antipodal edges and exactly hemispherical
-interiors are ambiguous and throw. Self-intersecting spherical rings are unsupported.
-`contains()`, `containsGeoPoint()` and `inPolygon()` retain planar half-open behavior.
-The polygon's `boundingBox()` is also planar: do not use it (including SQL/geohash
-candidate filters) to bound an opt-in spherical region.
+| Feature | Guide |
+| --- | --- |
+| Coordinates, immutable polygons, area, centroid, simplification, validation | [Geometry](docs/geometry.md) |
+| Bounding boxes, circles, interchangeable region contracts | [Regions](docs/regions.md) |
+| Bearings, interpolation, WGS-84 Vincenty solver and accuracy limits | [Geodesy](docs/geodesy.md) |
+| Parameterized MySQL, PostgreSQL and SQLite proximity queries | [SQL](docs/sql.md) |
+| GeoJSON and WKT codecs, coordinate order and unsupported shapes | [Formats](docs/formats.md) |
+| Google, Nominatim, reverse geocoding, PSR-18 HTTP and test doubles | [Geocoding](docs/geocoding.md) |
+| Encoding, neighbors and bounded region coverage | [Geohashes](docs/geohash.md) |
+| Reproducible measurements | [Benchmarks](docs/benchmarks.md) |
 
-`isValid()` / `validationErrors()` check **planar** rings for distinct vertices,
-consecutive duplicates, zero signed area, and non-adjacent segment intersections.
-They are O(n²), do not certify spherical validity, and do not run implicitly in
-constructors. `isClockwise()` also uses planar longitude/latitude orientation.
+Geocoding uses native cURL or an injected PSR-18 client. Credentials, provider
+policies, caching and rate limits are described in the geocoding guide.
 
-`simplify()` applies closed-ring Douglas–Peucker using spherical segment distances.
-Tolerance must be finite and nonnegative. It preserves the original when fewer
-than three vertices would remain, and leaves incomplete rings and zero tolerance
-unchanged. It does not guarantee topology preservation; validate the result when
-that matters. `reversed()` and `simplify()` return immutable values.
+Contributors: read [Architecture](ARCHITECTURE.md) and [Development](docs/development.md).
+CI runs PHP 8.3–8.5, the documentation examples, PHPStan max and dependency/purity
+checks. See [CHANGELOG.md](CHANGELOG.md) for release history.
 
-For large rings, use the variadic constructor, `fromArray()` or `fromGeoPoints()`.
-Repeated `withVertex()` calls copy the growing array and cost O(n²) overall.
+MIT licensed; see [LICENSE](LICENSE). Created by Anthony Martin. Some original
+geometry code derives from [Jan Philip Matuschek's bounding-coordinate work](http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates).
