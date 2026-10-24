@@ -10,7 +10,7 @@ composer require anthonymartin/geo-location:^3.0
 ```
 
 The library requires PHP 8.3 or later. Geometry needs neither cURL nor BCMath.
-Only `GoogleGeocoder` needs cURL; JSON is built into supported PHP versions.
+Geocoding uses cURL by default or an injected PSR-18 client; JSON is built into PHP.
 Upgrading from 2.x? Read [UPGRADE-3.0.md](UPGRADE-3.0.md) first. Applications on
 `^2.0` stay on 2.x, which retains PHP 5.4 support and receives security and bug
 fixes alongside 3.x, with no scheduled end-of-support date.
@@ -95,58 +95,91 @@ $geopointB = new GeoPoint(40.65, -73.95);
 $distance = $geopointA->distanceTo($geopointB, 'miles'); // approximately 25.8886 miles
 ```
 
-### Google geocoding
+### Geocoding with Nominatim
 
-Follow Google's [Geocoding API setup guide](https://developers.google.com/maps/documentation/geocoding/get-api-key)
-to configure billing, enable the API, and create an API key. `GoogleGeocoder::geocode(string $address): GeoPoint`
-returns a `GeoPoint`. Construct the geocoder with your API key; an empty key
-throws `NoApiKeyException`.
+Geocoders live in `AnthonyMartin\GeoLocation\Geocoding`. Nominatim needs no API key;
+supply your application's User-Agent and a real contact email. For the public OSM
+server, read the [usage policy](https://operations.osmfoundation.org/policies/nominatim/):
+limit the **whole application to at most one request per second**, cache repeated
+lookups, display OpenStreetMap attribution, and do not use it for autocomplete or
+systematic/bulk scraping. Choose a self-hosted/commercial endpoint for heavier use.
+The `endpoint` constructor option lets you switch services without library changes.
+Rate limiting, caching and retries belong in your application's HTTP client wrapper.
 
 ```php
 <?php
-
 require_once __DIR__ . '/vendor/autoload.php';
 
-use AnthonyMartin\GeoLocation\GoogleGeocoder;
+use AnthonyMartin\GeoLocation\Geocoding\NominatimGeocoder;
 
-$geocoder = new GoogleGeocoder('google-api-key-goes-here');
-$geopoint = $geocoder->geocode('New York, NY 10001');
-$latitude = $geopoint->getLatitude();
-$longitude = $geopoint->getLongitude();
-
+$geocoder = new NominatimGeocoder('YourApplication/1.0', 'you@example.com');
+$point = $geocoder->geocode('London');
+// For repeated lookups, enforce the limit through your shared client wrapper.
 ```
 
-`geocode()` uses the first result returned by Google, including a partial
-match. It does not disambiguate addresses. Requests have a 5-second connection
-timeout and a 10-second total timeout. Transport failures, HTTP errors, malformed
-responses, and Google statuses such as `ZERO_RESULTS` produce descriptive
-exceptions.
+Replace the identification values with your own before using the public service.
+`geocode()` returns the first `GeoPointInterface`, or throws `AddressNotFoundException`.
+`geocodeAll()` returns candidate results, or an empty array; `reverse($point)` returns
+an address result for the closest suitable object, which may differ from the requested
+coordinate. `GeocodingResult` is an immutable snapshot with `point`, `formattedAddress`,
+`components`, `partialMatch`, and `raw` fields and corresponding interface getters.
+Keep provider attribution from the raw payload where required.
 
-### Other providers and test doubles
+### Google geocoding
 
-In 3.0, application services can depend on
-`AnthonyMartin\GeoLocation\Interfaces\Geocoder` instead of a particular provider.
-`GoogleGeocoder` implements this interface. Supply another implementation for a
-different provider, or a local test double:
+Google requires an API key and [Geocoding API setup](https://developers.google.com/maps/documentation/geocoding/get-api-key).
 
 ```php
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
 
+use AnthonyMartin\GeoLocation\Geocoding\GoogleGeocoder;
+
+$geocoder = new GoogleGeocoder('google-api-key-goes-here', region: 'us', language: 'en');
+$point = $geocoder->geocode('New York, NY 10001');
+$results = $geocoder->geocodeAll('New York');
+$address = $geocoder->reverse($point);
+```
+
+Optional `components: ['country' => 'US']` supplies forward-geocoding filters.
+Partial matches are exposed in results. HTTP 429 and Google's `OVER_QUERY_LIMIT`
+throw `RateLimitedException`. Malformed responses throw `UnexpectedResponseException`;
+transport failures remain in the `CurlErrorException` family. All implement the
+library's `ExceptionInterface`. The old root `GoogleGeocoder` name is a compatibility
+alias deprecated only in 3.x, for removal in 4.0.
+
+### HTTP injection and test doubles
+
+Default geocoding uses native cURL with 5-second connection and 10-second total
+timeouts. It needs no Composer runtime dependency. Alternatively inject a PSR-18
+client and PSR-17 request factory (`client:` and `requestFactory:`); configure
+that client's own timeouts. Guzzle or Symfony's PSR-18 adapter are suitable choices.
+Their dependencies are optional Composer suggestions.
+
+The library also supplies `Geocoding\CurlClient`, a PSR-18 adapter for callers
+who install `psr/http-client`, `psr/http-factory` and a PSR-17 implementation
+such as `nyholm/psr7`. It accepts a response factory and an optional stream factory (inferred when the response
+factory implements both interfaces); providers accept the same
+factory's request interface. Missing PSR packages produce a clear exception when
+loading CurlClient. The dependency-free default uses the underlying native transport.
+HTTP 4xx/5xx responses are returned by CurlClient as required by PSR-18; the provider
+then maps their statuses. It does not follow redirects automatically.
+
+Applications can depend on `Interfaces\Geocoder` and `GeocodingResultInterface`.
+Use the shipped in-memory provider for deterministic tests:
+
+```php
+<?php
 require_once __DIR__ . '/vendor/autoload.php';
 
 use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation\Interfaces\Geocoder;
+use AnthonyMartin\GeoLocation\Geocoding\Testing\ArrayGeocoder;
 
-$geocoder = new class implements Geocoder {
-    public function geocode(string $address): GeoPoint {
-        return new GeoPoint(40.5, -74.4); // A deterministic test fixture.
-    }
-};
+$geocoder = new ArrayGeocoder(['Office' => new GeoPoint(40.5, -74.4)]);
 $point = $geocoder->geocode('Office');
+$address = $geocoder->reverse($point);
+assert($address->getFormattedAddress() === 'Office');
 ```
-
-Providers return a point or throw. The interface does not impose constructor
-arguments, provider-specific configuration, or a raw response format.
 
 ### Bounding box coordinates
 
@@ -295,7 +328,7 @@ All library exceptions implement `AnthonyMartin\GeoLocation\Exceptions\Exception
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use AnthonyMartin\GeoLocation\GoogleGeocoder;
+use AnthonyMartin\GeoLocation\Geocoding\GoogleGeocoder;
 
 try {
     $point = (new GoogleGeocoder('your-api-key'))->geocode('New York');
@@ -324,11 +357,11 @@ composer install
 composer test
 composer test:no-bcmath
 composer test:readme
-composer analyse
+composer lint
 ```
 
 CI tests PHP 8.3, 8.4, and 8.5, including geometry installation without cURL.
-PHPStan checks all library source at level 8 without a baseline. README examples
+PHPStan checks all library source at maximum level without a baseline. README examples
 are also executed with mocked geocoding.
 Geocoding tests use local response fixtures and do not require an API key.
 The `2.x` branch retains its separate PHP 5.4–8.5 compatibility suite.

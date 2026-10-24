@@ -34,7 +34,10 @@
     "require-dev": {
         "phpunit/phpunit": "^12.5",
         "phpstan/phpstan": "^2.1",
-        "deptrac/deptrac": "^4.7"
+        "deptrac/deptrac": "^4.7",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.1",
+        "nyholm/psr7": "^1.8"
     },
     "scripts": {
         "test": "phpunit --bootstrap vendor/autoload.php tests",
@@ -51,7 +54,11 @@
         ]
     },
     "suggest": {
-        "ext-curl": "Required only by GoogleGeocoder; geometry has no cURL dependency."
+        "ext-curl": "Default geocoding transport; unnecessary when injecting a PSR-18 client.",
+        "psr/http-client": "Optional PSR-18 client contract for injected HTTP transports.",
+        "psr/http-factory": "Optional PSR-17 request/response factories for injected HTTP transports.",
+        "guzzlehttp/guzzle": "An optional PSR-18 client; supply its PSR-17 request factory too.",
+        "symfony/http-client": "An optional PSR-18 client adapter; supply a PSR-17 request factory too."
     },
     "config": {
         "platform": {

@@ -55,6 +55,8 @@ final class ApiPolishTest extends TestCase {
         $point = new GeoPoint(40.5, -74.4);
         $provider = new class($point) implements Geocoder {
             public function __construct(private GeoPoint $point) {}
+            public function geocodeAll(string $address): array {return [new \AnthonyMartin\GeoLocation\Geocoding\GeocodingResult($this->point,$address)];}
+            public function reverse(\AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface $point): \AnthonyMartin\GeoLocation\Geocoding\GeocodingResult {return new \AnthonyMartin\GeoLocation\Geocoding\GeocodingResult($point);}
             public function geocode(string $address): GeoPoint { return $this->point; }
         };
         $resolve = static fn(Geocoder $geocoder): GeoPoint => $geocoder->geocode('Office');
@@ -66,9 +68,9 @@ final class ApiPolishTest extends TestCase {
     }
 
     public function testGeocoderRejectsAnUnexpectedTransportResult(): void {
-        require_once __DIR__ . '/fixtures/geocoding-transport.php';
-        \AnthonyMartin\GeoLocation\GeocodingCurlFixture::reset();
-        \AnthonyMartin\GeoLocation\GeocodingCurlFixture::$body = true;
+        require_once __DIR__ . '/fixtures/native-curl-transport.php';
+        \AnthonyMartin\GeoLocation\Geocoding\GeocodingCurlFixture::reset();
+        \AnthonyMartin\GeoLocation\Geocoding\GeocodingCurlFixture::$body = true;
         $this->expectException(\AnthonyMartin\GeoLocation\Exceptions\UnexpectedResponseException::class);
         $this->expectExceptionMessage('did not return a response body');
         (new GoogleGeocoder('test-key'))->geocode('Office');
