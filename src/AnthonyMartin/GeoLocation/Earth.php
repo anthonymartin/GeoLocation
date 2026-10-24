@@ -11,15 +11,18 @@ class Earth {
   public static $MIN_LON;  // -PI
   public static $MAX_LON;  //  PI
 
-	public static function getRadius($unit_of_measurement) {
-		$u = $unit_of_measurement;
-		if($u == 'miles' || $u == 'mi')
-			return $radius = self::RADIUS_MI;
-		elseif($u == 'kilometers' || $u == 'km')
-			return $radius = self::RADIUS_KM;
-
-		else throw new \InvalidArgumentException('You must supply a valid unit of measurement');
-	}
+  public static function getRadius($unit_of_measurement) {
+    if (is_string($unit_of_measurement)) {
+      $unit = strtolower($unit_of_measurement);
+      if ($unit === 'miles' || $unit === 'mi') {
+        return self::RADIUS_MI;
+      }
+      if ($unit === 'kilometers' || $unit === 'km') {
+        return self::RADIUS_KM;
+      }
+    }
+    throw new Exceptions\InvalidUnitException('You must supply a valid unit of measurement: km, kilometers, mi or miles.');
+  }
 
     /**
      * @return float

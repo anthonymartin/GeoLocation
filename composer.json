@@ -1,9 +1,19 @@
 {
     "name": "anthonymartin/geo-location",
-    "type": "class",
+    "type": "library",
     "description": "Powerful GeoCoding library: Retrieve bounding box coordinates, distances between geopoints, point in polygon, get longitude and latitude from addresses and more with GeoLocation for PHP",
-    "keywords": ["geolocation","geocoding", "bounding coordinates", "bounding box coordinates", "distances", "geocode", "latitude", "longitude", "point in polygon"],
-    "homepage": "https://github.com/anthonymartin/GeoLocation-PHP",
+    "keywords": [
+        "geolocation",
+        "geocoding",
+        "bounding coordinates",
+        "bounding box coordinates",
+        "distances",
+        "geocode",
+        "latitude",
+        "longitude",
+        "point in polygon"
+    ],
+    "homepage": "https://github.com/anthonymartin/GeoLocation",
     "license": "MIT",
     "authors": [
         {
@@ -14,14 +24,20 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0"
+        "php": ">=5.4.0",
+        "ext-curl": "*",
+        "ext-json": "*"
     },
     "autoload": {
-        "psr-0": {
-            "AnthonyMartin": "src/"
+        "psr-4": {
+            "AnthonyMartin\\GeoLocation\\": "src/AnthonyMartin/GeoLocation/"
         }
     },
     "require-dev": {
-        "phpunit/phpunit": "^7"
+        "phpunit/phpunit": "^9.6 || ^12.5"
+    },
+    "scripts": {
+        "test": "phpunit --bootstrap vendor/autoload.php tests",
+        "test:no-bcmath": "@php -n tests/without-bcmath.php"
     }
 }

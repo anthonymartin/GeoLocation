@@ -2,6 +2,6 @@
 
 namespace AnthonyMartin\GeoLocation\Exceptions;
 
-class OutOfBoundsException extends \Exception
+class OutOfBoundsException extends Exception
 {
 }
