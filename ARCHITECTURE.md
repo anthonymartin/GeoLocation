@@ -15,3 +15,4 @@ Run `composer lint`: PHPStan at maximum level, Deptrac, and the Core purity chec
 There is no PHPStan baseline; new dependencies must satisfy these rules.
 The root GoogleGeocoder is temporarily classified as Geocoding until CDZI-075 moves it.
 See [Deptrac configuration](https://deptrac.github.io/deptrac/configuration/) for rule syntax.
+Geodesy stays an outer pure-math layer; use `Vincenty::inverse()` explicitly (CDZI-072 option a).
