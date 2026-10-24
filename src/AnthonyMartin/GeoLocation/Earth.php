@@ -8,11 +8,16 @@ class Earth {
 
   const RADIUS_KM = 6371.01;
   const RADIUS_MI = 3958.762079;
-  public static $MIN_LAT;  // -PI/2
-  public static $MAX_LAT;  //  PI/2
-  public static $MIN_LON;  // -PI
-  public static $MAX_LON;  //  PI
+  /** @var float Bounds in radians; retained as writable properties for compatibility. */
+  public static $MIN_LAT = -M_PI_2;
+  /** @var float Bounds in radians; retained as writable properties for compatibility. */
+  public static $MAX_LAT = M_PI_2;
+  /** @var float Bounds in radians; retained as writable properties for compatibility. */
+  public static $MIN_LON = -M_PI;
+  /** @var float Bounds in radians; retained as writable properties for compatibility. */
+  public static $MAX_LON = M_PI;
 
+  /** @param string $unit_of_measurement */
   public static function getRadius(mixed $unit_of_measurement): float {
     if (is_string($unit_of_measurement)) {
       $unit = strtolower($unit_of_measurement);

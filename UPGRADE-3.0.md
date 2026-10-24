@@ -71,8 +71,9 @@ $point = $point->withLatitude(0.5, true)->withLongitude(-1, true);
 Every `with...()` call returns a new point. Existing references, including points
 already stored in a polygon or bounding box, remain unchanged. Capture the return
 value. These methods retain finite/range validation and throw without changing
-the original. Coordinate fields are readonly; setting dynamic properties or
-mutating protected fields from a subclass is no longer allowed.
+the original. Coordinate fields are private and readonly. `GeoPoint` is final; use composition
+or implement `GeoPointInterface` for application-specific state and behavior.
+Each replacement uses the validated constructor; there is no reflective copying.
 
 ## Coordinate types
 
@@ -171,25 +172,30 @@ errors. Other existing library exceptions keep their inheritance. Native PHP
 signature violations raise `TypeError`, which is separate from the library's
 validation exceptions.
 
-## Subclasses and interface implementations
+## Composition and interface implementations
 
-Before, methods generally had no native return types. After, overrides and
-implementations must match the declared signatures. For example:
+`GeoPoint` and `Polygon` are final readonly value objects. Replace subclasses
+with composition, keeping application-specific state outside the coordinate:
 
 ```php
-readonly class MyPoint extends GeoPoint {
-    public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
-        return parent::distanceTo($geopoint, $unit_of_measurement);
-    }
+use AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface;
+
+final readonly class Place {
+    public function __construct(public GeoPointInterface $point, public string $name) {}
 }
+
+$place = new Place(new GeoPoint(40.5, -74.4), 'Office');
+$moved = new Place($place->point->withLatitude(41), $place->name);
 ```
 
-`GeoPoint` subclasses must also be `readonly`. Geometry predicates return `bool`,
-coordinate/distance getters return `float`, vertex getters return `array`, and
-`Polygon::addVertex()` returns `void`. Factory methods return their concrete
-geometry classes. Check the interfaces when updating custom implementations.
-Constructors remain absent from interfaces, so a `BoundingBox` subclass can still
-use a different constructor signature.
+To supply different geometry behavior, implement the relevant interfaces instead.
+Methods declare native parameter and return types: predicates return `bool`,
+coordinate/distance getters return `float`, and vertex getters return `array` with
+PHPDoc element types. Interface factories return `self`; geometry results use
+interfaces. Concrete implementations may use covariant returns.
+
+Constructors remain absent from interfaces. `BoundingBox` is still subclassable;
+overrides must match the declared signatures, but its constructor is unconstrained.
 
 ## Deliberately unchanged
 
@@ -197,3 +203,65 @@ Before and after: polygons with zero, one, or two vertices return `false` for
 containment, without warnings. Malformed vertices still throw. There is no new
 minimum-vertex exception to handle. Geometry still uses haversine distances,
 requires no BCMath, and preserves the validation and containment fixes from 2.x.
+
+## Geocoder contract and named arguments
+
+`Interfaces\Geocoder`, implemented by `GoogleGeocoder`, lets application services
+depend on an address-to-point contract and supply their own provider or test double.
+
+Interface and implementation parameter names agree:
+`BoundingBoxInterface::contains(GeoPointInterface $point)` and
+`PolygonInterface::containsGeoPoint(GeoPointInterface $point)`. Use `point:`
+for both named-argument calls. `GeoPoint::distanceTo()` and box factories also
+accept `GeoPointInterface`; `GeoPoint::inPolygon()` accepts `PolygonInterface`.
+
+`Earth::$MIN_LAT`, `$MAX_LAT`, `$MIN_LON`, and `$MAX_LON` now start with their
+radian bounds instead of `null`. They remain public and writable for compatibility.
+The bound getter methods remain authoritative and do not depend on writes to
+these legacy properties.
+
+## Immutable polygons
+
+Before (2.x):
+
+```php
+$polygon = new Polygon();
+$polygon->addVertex($point);
+```
+
+After:
+
+```php
+$polygon = new Polygon();
+$polygon = $polygon->withVertex($point);
+// Or supply all points at once:
+$polygon = new Polygon($pointA, $pointB, $pointC);
+```
+
+`Polygon` is now final and readonly. `addVertex()` is removed; `withVertex()`
+returns a new polygon and leaves existing references unchanged. Constructors and
+`withVertex()` snapshot coordinates from alternative point implementations.
+Changing such an input later, or editing an array returned by `getVertices()`,
+does not mutate the polygon. `Polygon::fromArray()` remains available. Empty and
+incomplete polygons still return `false` for containment.
+
+## Geometry interfaces as abstractions
+
+Replace `Interfaces\Polygon` with `Interfaces\PolygonInterface`. Implement
+`withVertex(GeoPointInterface $point): self` instead of `addVertex(): void`,
+and use `containsGeoPoint(GeoPointInterface $point): bool`.
+`fromArray(array $vertices): self` permits factories to return an implementation's
+own type. The bounding-box factory similarly returns `self` on its interface.
+
+`GeoPointInterface` now includes degree/radian getters, immutable coordinate
+replacement methods, and `boundingBox(): BoundingBoxInterface`, in addition to
+distance and polygon containment. `BoundingBoxInterface` includes named corners
+and `getPerimeter()`. Point results and collections use `GeoPointInterface`;
+polygon results use `PolygonInterface`. The geocoder returns `GeoPointInterface`,
+so alternative providers can return their own point implementations. Concrete
+library methods can still return their own classes covariantly.
+
+Custom implementations must match the new signatures and documented contracts;
+subclassing the bundled geometry classes is no longer necessary. Constructors
+remain absent from all interfaces. These changes apply only to 3.x; 2.x APIs
+remain supported as-is.

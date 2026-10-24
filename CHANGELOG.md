@@ -2,39 +2,56 @@
 
 ## 3.0.0 — 2026-10-24
 
+An earlier GitHub-only v3.0.0 tag was replaced before Packagist publication.
+
 This major release changes public contracts intentionally. Read
 [UPGRADE-3.0.md](UPGRADE-3.0.md) before changing your Composer constraint.
 Applications using `^2.0` remain on 2.x.
 
 ### Breaking changes
 
-- Require PHP 8.3 or later and add native parameter/return types to public
-  classes and interfaces. `GeoPoint` is a readonly class; its subclasses must
-  also be readonly and overrides must match the typed signatures.
-- Remove deprecated `GeoLocation` and `Interfaces\GeoLocationInterface`.
-- Make `GeoPoint` immutable: remove all four setters and add `withLatitude()`
-  and `withLongitude()`, which return a new point and accept degree or radian input.
+- Require PHP 8.3 or later; add native parameter/return types and precise numeric
+  input and collection annotations.
+- Make `GeoPoint` final and readonly with private scalar coordinate fields.
+  Replace setters with `withLatitude()` and `withLongitude()`, which construct
+  new validated points. Use composition or `GeoPointInterface` for custom behavior.
+- Make `Polygon` final and readonly. Replace mutating `addVertex()` with
+  `withVertex()`, returning a new polygon. Snapshot alternative point inputs.
+- Replace `Interfaces\Polygon` with `PolygonInterface`. Geometry consumes point
+  and polygon interfaces; interface factories return `self` and other geometry
+  results use interfaces. Implementations can supply their own geometry types.
+- Remove `GeoLocation`, `Interfaces\GeoLocationInterface`, `GeoPoint::fromAddress()`
+  and the legacy raw geocoder. Use `(new GoogleGeocoder($apiKey))->geocode($address)`.
+  `GoogleGeocoder` implements the provider-independent `Interfaces\Geocoder` contract.
 - Normalize validated coordinates to floats, including all point and box getters.
-- Return SW, SE, NE, NW perimeter order from box `getVertices()` and
-  `getGeoPoints()`. Named corner getters retain their meaning.
-- Remove `GeoPoint::fromAddress()` and the legacy raw geocoder. Expose
-  `(new GoogleGeocoder($apiKey))->geocode($address): GeoPoint` as the separate
-  Google adapter. Geometry has no cURL dependency; cURL remains a suggestion.
+- Return SW, SE, NE, NW perimeter order from box `getVertices()` and `getGeoPoints()`.
+  Named corner getters retain their meanings. Align interface parameter names with
+  implementations for named-argument calls.
 - Make the library's `InvalidArgumentException` extend PHP's native argument
   exception and `InvalidUnitException` extend the library argument exception.
   `ExceptionInterface` remains the common catch type.
+- Initialize Earth's existing writable latitude/longitude bounds in radians
+  instead of null.
+
+### Validation and documentation
+
+- Check library source and independent interface implementations with PHPStan
+  level 8 without a baseline. Execute README examples with mocked geocoding in CI.
+- Add a quick start, API reference, provider/test-double example, and migration
+  examples covering immutable geometry, types, and interface contracts.
+- Test PHP 8.3–8.5, including clean geometry installations without cURL.
 
 ### Retained behavior and support
 
 - Incomplete polygons still return `false`. Interfaces do not declare constructors.
 - Keep strict validation, haversine distances, inclusive/antimeridian-aware box
   containment, proper polygon rings, and no BCMath dependency.
-- Geocoding still validates Google's first result, encodes URL parameters, uses
+- Geocoding validates Google's first result, encodes URL parameters, uses
   5-second connection/10-second total timeouts, and releases handles on failures.
+  Geometry has no cURL dependency; cURL remains a suggestion.
 - Maintain `2.x` for PHP 5.4 users and applications not ready to migrate, with
-  security and bug fixes alongside 3.x, with no scheduled end-of-support date.
-- CI covers PHP 8.3–8.5 and clean geometry installations without cURL. The 2.x
-  compatibility suite remains on the maintenance branch.
+  security and bug fixes alongside 3.x and no scheduled end-of-support date.
+  Its compatibility suite remains on the maintenance branch.
 
 ## 2.1.3 — 2026-10-24
 

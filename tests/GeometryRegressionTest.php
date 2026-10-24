@@ -271,7 +271,7 @@ class GeometryRegressionTest extends TestCase
                 $this->assertFalse($point->inPolygon($polygon));
                 $this->assertFalse($polygon->containsGeoPoint($point));
                 $this->assertFalse(Polygon::pointInPolygon($point, $polygon));
-                $polygon->addVertex(new GeoPoint($count * 2, $count * 2));
+                $polygon = $polygon->withVertex(new GeoPoint($count * 2, $count * 2));
             }
             $this->assertCount(3, $polygon->getVertices());
         } catch (\Throwable $error) {

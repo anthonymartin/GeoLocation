@@ -9,14 +9,6 @@ use AnthonyMartin\GeoLocation\Polygon;
 use AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface;
 use PHPUnit\Framework\TestCase;
 
-readonly class Version3Point extends GeoPoint {
-    public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
-        return parent::distanceTo($geopoint, $unit_of_measurement);
-    }
-
-    public function tryToMutateLatitude(): void { $this->degLat = 20.0; }
-}
-
 class Version3Box extends BoundingBox {
     public function __construct(GeoPoint $center, float $km) {
         $box = $center->boundingBox($km, 'km');
@@ -100,12 +92,13 @@ class Version3MigrationTest extends TestCase {
         }
     }
 
-    public function testReadonlyPointCannotBeMutatedByASubclass(): void {
-        $point = new Version3Point(10, 20);
-        $this->assertTrue((new ReflectionClass(GeoPoint::class))->isReadOnly());
-        $this->assertInstanceOf(Version3Point::class, $point->withLatitude(11));
+    public function testPointIsFinalReadonlyAndRejectsExtraMutableState(): void {
+        $point = new GeoPoint(10, 20);
+        $reflection = new ReflectionClass(GeoPoint::class);
+        $this->assertTrue($reflection->isFinal());
+        $this->assertTrue($reflection->isReadOnly());
         $this->expectException(Error::class);
-        $point->tryToMutateLatitude();
+        $point->metadata = new stdClass();
     }
 
     public function testRemovedApisCannotBeUsedAccidentally(): void {
@@ -118,14 +111,14 @@ class Version3MigrationTest extends TestCase {
     }
 
     public function testInterfacesNeverConstrainConstructors(): void {
-        foreach (['GeoPointInterface', 'BoundingBoxInterface', 'Polygon'] as $name) {
+        foreach (['GeoPointInterface', 'BoundingBoxInterface', 'PolygonInterface'] as $name) {
             $interface = new ReflectionClass('AnthonyMartin\\GeoLocation\\Interfaces\\' . $name);
             $this->assertFalse($interface->hasMethod('__construct'));
             foreach ($interface->getMethods() as $method) {
                 $this->assertTrue($method->hasReturnType());
             }
         }
-        $point = new Version3Point(40, -74);
+        $point = new GeoPoint(40, -74);
         $this->assertSame(0.0, $point->distanceTo($point, 'km'));
         $this->assertTrue((new Version3Box($point, 1))->contains($point));
     }

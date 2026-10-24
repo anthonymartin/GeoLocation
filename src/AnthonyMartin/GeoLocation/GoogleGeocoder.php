@@ -9,7 +9,7 @@ use AnthonyMartin\GeoLocation\Exceptions\NoApiKeyException;
 use AnthonyMartin\GeoLocation\Exceptions\UnexpectedResponseException;
 
 /** Google geocoding adapter. Geometry classes do not depend on this service. */
-class GoogleGeocoder {
+class GoogleGeocoder implements Interfaces\Geocoder {
   public function __construct(private readonly string $apiKey) {
     if ($apiKey === '') {
       throw new NoApiKeyException();
@@ -56,6 +56,7 @@ class GoogleGeocoder {
     return new GeoPoint($location->lat, $location->lng);
   }
 
+  /** @return array{string, int} */
   private function transport(string $address): array {
     if (!function_exists('curl_init')) {
       throw new UnexpectedResponseException('Google geocoding requires the cURL extension.');
@@ -94,7 +95,10 @@ class GoogleGeocoder {
     if ($body === false) {
       throw new CurlErrorException($error !== '' ? $error : 'Google geocoding request failed.');
     }
-    return array($body, $httpStatus);
+    if (!is_string($body)) {
+      throw new UnexpectedResponseException('Google geocoding transport did not return a response body.');
+    }
+    return [$body, $httpStatus];
   }
 
 }

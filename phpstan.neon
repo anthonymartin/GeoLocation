@@ -1,0 +1,8 @@
+parameters:
+    level: 8
+    phpVersion: 80300
+    paths:
+        - src
+        - tests/fixtures/alternative-geometry.php
+    treatPhpDocTypesAsCertain: false
+    tmpDir: .phpstan-cache

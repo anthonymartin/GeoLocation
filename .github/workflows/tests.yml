@@ -25,6 +25,8 @@ jobs:
       - run: composer install --no-interaction --prefer-dist
       - run: composer validate --strict
       - run: composer test
+      - run: composer test:readme
+      - run: composer analyse
       - run: composer test:no-bcmath
       - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l
 
