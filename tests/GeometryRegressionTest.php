@@ -274,8 +274,10 @@ class GeometryRegressionTest extends TestCase
                 $polygon->addVertex(new GeoPoint($count * 2, $count * 2));
             }
             $this->assertCount(3, $polygon->getVertices());
-        } finally {
+        } catch (\Throwable $error) {
             restore_error_handler();
+            throw $error;
         }
+        restore_error_handler();
     }
 }

@@ -44,6 +44,7 @@ jobs:
           tools: composer:2.2
       - run: composer install --no-dev --no-interaction --prefer-dist
       - run: php -r 'require "vendor/autoload.php"; require "tests/legacy-runtime.php";'
+      - run: php tests/backward-compatibility-runtime.php
       - run: php -n tests/without-bcmath.php
       - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l
 
