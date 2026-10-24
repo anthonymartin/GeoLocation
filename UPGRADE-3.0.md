@@ -1,4 +1,4 @@
-# Upgrading from 2.x to 3.0
+# Upgrading from 2.x to 3.x
 
 3.0 is an opt-in major release. Existing 2.x APIs remain supported as-is;
 2.1.3 removes the deprecation annotations and supersedes the retirement wording
@@ -13,7 +13,7 @@ Before: PHP 5.4 or later, `composer require anthonymartin/geo-location:^2.0`.
 After: PHP 8.3 or later:
 
 ```bash
-composer require anthonymartin/geo-location:^3.0
+composer require anthonymartin/geo-location:^3.1
 ```
 
 Geometry needs no optional extensions. Install cURL only if using
@@ -178,7 +178,7 @@ implementations must match the declared signatures. For example:
 
 ```php
 readonly class MyPoint extends GeoPoint {
-    public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
+    public function distanceTo(\AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface $geopoint, mixed $unit_of_measurement): float {
         return parent::distanceTo($geopoint, $unit_of_measurement);
     }
 }
@@ -186,8 +186,9 @@ readonly class MyPoint extends GeoPoint {
 
 `GeoPoint` subclasses must also be `readonly`. Geometry predicates return `bool`,
 coordinate/distance getters return `float`, vertex getters return `array`, and
-`Polygon::addVertex()` returns `void`. Factory methods return their concrete
-geometry classes. Check the interfaces when updating custom implementations.
+`Polygon::withVertex()` returns a new polygon. Interface factories return `self`,
+and interface methods return geometry interfaces. Concrete implementations may
+use covariant concrete returns. Check the interfaces when updating custom implementations.
 Constructors remain absent from interfaces, so a `BoundingBox` subclass can still
 use a different constructor signature.
 
@@ -198,9 +199,10 @@ containment, without warnings. Malformed vertices still throw. There is no new
 minimum-vertex exception to handle. Geometry still uses haversine distances,
 requires no BCMath, and preserves the validation and containment fixes from 2.x.
 
-## Compatible improvements in 3.1
+## API cleanup before 3.x adoption
 
-3.1 adds `Interfaces\Geocoder`, implemented by `GoogleGeocoder`. Depend on that
+The upcoming 3.1 release completes the 3.x API cleanup, including intentional
+changes to the initial v3.0.0 tag before adoption. It adds `Interfaces\Geocoder`, implemented by `GoogleGeocoder`. Depend on that
 interface when injecting an address-to-point service or supplying a test double.
 Existing calls to `(new GoogleGeocoder($apiKey))->geocode($address)` remain supported.
 
@@ -210,17 +212,59 @@ fields retain their references, as in a shallow copy. Subclasses with metadata
 that depends on coordinates may override the protected `copyWithCoordinates()`
 hook to recompute that metadata. Uninitialized fields remain uninitialized.
 
-Interface parameter names now match the existing concrete methods:
-`BoundingBoxInterface::contains(GeoPoint $point)` and
-`Interfaces\Polygon::containsGeoPoint(GeoPoint $p)`. Use `point:` and `p:` when
-calling these methods with named arguments. Existing positional calls and concrete
-method parameter names are unchanged.
+Interface and implementation parameter names agree:
+`BoundingBoxInterface::contains(GeoPointInterface $point)` and
+`PolygonInterface::containsGeoPoint(GeoPointInterface $point)`. Use `point:`
+for both named-argument calls. `GeoPoint::distanceTo()` and box factories also
+accept `GeoPointInterface`; `GeoPoint::inPolygon()` accepts `PolygonInterface`.
 
 `Earth::$MIN_LAT`, `$MAX_LAT`, `$MIN_LON`, and `$MAX_LON` now start with their
 radian bounds instead of `null`. They remain public and writable for compatibility.
 The bound getter methods remain authoritative and do not depend on writes to
 these legacy properties.
 
-Polygon mutation and existing interfaces' concrete factory return types are
-unchanged in 3.x. A future major version may revisit them; no migration or API
-deprecation is introduced here.
+## Immutable polygons
+
+Before (2.x and the initial v3.0.0 tag):
+
+```php
+$polygon = new Polygon();
+$polygon->addVertex($point);
+```
+
+After:
+
+```php
+$polygon = new Polygon();
+$polygon = $polygon->withVertex($point);
+// Or supply all points at once:
+$polygon = new Polygon($pointA, $pointB, $pointC);
+```
+
+`Polygon` is now final and readonly. `addVertex()` is removed; `withVertex()`
+returns a new polygon and leaves existing references unchanged. Constructors and
+`withVertex()` snapshot coordinates from alternative point implementations.
+Changing such an input later, or editing an array returned by `getVertices()`,
+does not mutate the polygon. `Polygon::fromArray()` remains available. Empty and
+incomplete polygons still return `false` for containment.
+
+## Geometry interfaces as abstractions
+
+Replace `Interfaces\Polygon` with `Interfaces\PolygonInterface`. Implement
+`withVertex(GeoPointInterface $point): self` instead of `addVertex(): void`,
+and use `containsGeoPoint(GeoPointInterface $point): bool`.
+`fromArray(array $vertices): self` permits factories to return an implementation's
+own type. The bounding-box factory similarly returns `self` on its interface.
+
+`GeoPointInterface` now includes degree/radian getters, immutable coordinate
+replacement methods, and `boundingBox(): BoundingBoxInterface`, in addition to
+distance and polygon containment. `BoundingBoxInterface` includes named corners
+and `getPerimeter()`. Point results and collections use `GeoPointInterface`;
+polygon results use `PolygonInterface`. The geocoder returns `GeoPointInterface`,
+so alternative providers can return their own point implementations. Concrete
+library methods can still return their own classes covariantly.
+
+Custom implementations must match the new signatures and documented contracts;
+subclassing the bundled geometry classes is no longer necessary. Constructors
+remain absent from all interfaces. These changes apply only to 3.x; 2.x APIs
+remain supported as-is.

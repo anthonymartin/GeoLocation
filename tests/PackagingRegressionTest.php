@@ -41,7 +41,7 @@ class PackagingRegressionTest extends TestCase {
 
   public function testClassesImplementLoadableInterfaces() {
     foreach (array('GeoPoint' => 'GeoPointInterface', 'BoundingBox' => 'BoundingBoxInterface',
-      'Polygon' => 'Polygon') as $class => $interface) {
+      'Polygon' => 'PolygonInterface') as $class => $interface) {
       $this->assertTrue(is_subclass_of('AnthonyMartin\\GeoLocation\\' . $class,
         'AnthonyMartin\\GeoLocation\\Interfaces\\' . $interface));
     }

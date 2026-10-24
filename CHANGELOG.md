@@ -2,6 +2,16 @@
 
 ## 3.1.0 — Unreleased
 
+This release completes the 3.x API design before adoption. It intentionally changes
+contracts from the initial v3.0.0 tag; see the migration guide. 2.x is unaffected.
+
+- Make `Polygon` final and readonly. Replace mutating `addVertex()` with
+  `withVertex()`, returning a new polygon. Snapshot alternative point inputs.
+- Replace `Interfaces\Polygon` with `PolygonInterface`. Geometry accepts point
+  and polygon interfaces; interface factories return `self`, and other geometry
+  results return interfaces. Geocoder implementations may return their own point
+  types. Add coverage with independent point, polygon, box, and geocoder classes.
+
 - Fix immutable point replacements losing subclass fields or requiring the subclass
   constructor to accept two arguments. Preserve private ancestor fields and exact
   unchanged radian values; document shallow-copy semantics and the customization hook.
@@ -13,8 +23,7 @@
   `GoogleGeocoder` implements it without changing its existing API.
 - Add precise numeric-input and collection PHPDoc types, PHPStan level-8 checks,
   and executable README examples. Polish the quick start and API reference.
-- Keep 2.x supported as-is. Polygon mutability and existing concrete interface
-  return types remain unchanged in 3.x.
+- Keep 2.x supported as-is. These contract changes are confined to 3.x.
 
 ## 3.0.0 — 2026-10-24
 

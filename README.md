@@ -63,15 +63,17 @@ exceptions; accepting numeric strings does not mean accepting booleans or null.
 | `new GeoPoint(Number $latitude, Number $longitude, bool $inRadians = false)` | `GeoPoint` | Latitude first; immutable. |
 | `$point->getLatitude(bool $inRadians = false)` / `getLongitude(...)` | `float` | Degrees by default. |
 | `$point->withLatitude(Number $latitude, bool $inRadians = false)` / `withLongitude(...)` | `static` | New point; preserves subclass fields. |
-| `$point->distanceTo(GeoPoint $geopoint, string $unit_of_measurement)` | `float` | Explicit unit; spherical approximation. |
+| `$point->distanceTo(GeoPointInterface $geopoint, string $unit_of_measurement)` | `float` | Explicit unit; spherical approximation. |
 | `$point->boundingBox(Number $distance, string $unit_of_measurement)` | `BoundingBox` | Nonnegative search radius. |
-| `$box->contains(GeoPoint $point)` | `bool` | Inclusive boundaries; supports antimeridian crossing. |
+| `$box->contains(GeoPointInterface $point)` | `bool` | Inclusive boundaries; supports antimeridian crossing. |
 | `Polygon::fromArray(array $vertices)` | `Polygon` | `[latitude, longitude]` pairs in perimeter order. |
-| `$point->inPolygon(Polygon $polygon)` / `$polygon->containsGeoPoint(GeoPoint $p)` | `bool` | Planar, half-open boundaries. |
+| `$point->inPolygon(PolygonInterface $polygon)` / `$polygon->containsGeoPoint(GeoPointInterface $point)` | `bool` | Planar, half-open boundaries. |
 | `$box->getPerimeter()` / `$box->getVertices()` / `$polygon->getVertices()` | `list<GeoPoint>` | Box order: SW, SE, NE, NW. |
-| `$box->getPolygon()` / `$box->toPolygon()` | `Polygon` | New mutable polygon. |
-| `$geocoder->geocode(string $address)` | `GeoPoint` | First result or exception. |
+| `$box->getPolygon()` / `$box->toPolygon()` | `Polygon` | New immutable polygon. |
+| `$polygon->withVertex(GeoPointInterface $point)` | `Polygon` | New polygon; appends a coordinate snapshot. |
+| `$geocoder->geocode(string $address)` | `GeoPointInterface` | Google returns `GeoPoint`; other providers may return their own point type. |
 
+Interface names in this table live in `AnthonyMartin\GeoLocation\Interfaces`.
 The table describes accepted input types. Numeric inputs and units retain native
 `mixed` parameters so invalid values receive descriptive library exceptions.
 Public methods declare native return types; collection element types and numeric
@@ -224,8 +226,26 @@ returns `false` for fewer than three vertices. Boundary behavior is half-open, s
 some edges are inside and others are outside. Use `BoundingBox::contains()` for
 inclusive box boundaries.
 
-`Polygon` is a mutable collection of immutable points. `addVertex()` appends a
-point and returns `void`; it does not modify the point itself.
+`Polygon` is a final readonly value. Replace mutation with `withVertex()` and
+capture the returned polygon. The original polygon and its vertices stay unchanged.
+The constructor accepts points directly: `new Polygon($pointA, $pointB, $pointC)`.
+Coordinates from alternative point implementations are snapshotted on input,
+so later changes to those objects cannot change the polygon.
+
+```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\Polygon;
+
+$empty = new Polygon();
+$triangle = $empty->withVertex(new GeoPoint(0, 0))
+    ->withVertex(new GeoPoint(0, 4))
+    ->withVertex(new GeoPoint(4, 0));
+// $empty still has no vertices; $triangle has three.
+```
 
 ### Box corners and polygons
 
@@ -252,6 +272,23 @@ index order (SW, SE, NW, NE).
 For a box that does not cross the antimeridian, pass the returned polygon to
 `$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
 the antimeridian, use `$boundingBox->contains($geopointA)` instead.
+
+## Interfaces and alternative implementations
+
+Geometry accepts `GeoPointInterface` and `PolygonInterface` inputs. A point from
+an alternative geocoder can be passed directly to `distanceTo()`,
+`BoundingBox::fromGeoPoint()`, `contains()`, and polygon construction.
+
+Interface factories return `self`; geometry results use `GeoPointInterface`,
+`PolygonInterface`, and `BoundingBoxInterface`. Implementations can return their
+own types without extending this library's concrete classes. The bundled classes
+retain precise concrete return types where appropriate. Interface constructors
+are unconstrained. `PolygonInterface` replaces the old `Interfaces\Polygon` name.
+
+All providers must honor finite coordinate/range and collection contracts.
+`GeoPointInterface` does not force storage immutability; the bundled `GeoPoint`
+is readonly, and `Polygon` snapshots alternative inputs. See
+[the migration guide](UPGRADE-3.0.md) for the updated signatures.
 
 ## Exceptions
 

@@ -8,7 +8,7 @@ use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\GoogleGeocoder;
 use AnthonyMartin\GeoLocation\Interfaces\BoundingBoxInterface;
 use AnthonyMartin\GeoLocation\Interfaces\Geocoder;
-use AnthonyMartin\GeoLocation\Interfaces\Polygon as PolygonInterface;
+use AnthonyMartin\GeoLocation\Interfaces\PolygonInterface;
 use AnthonyMartin\GeoLocation\Polygon;
 use PHPUnit\Framework\TestCase;
 
@@ -78,7 +78,7 @@ final class ApiPolishTest extends TestCase {
         $point = new GeoPoint(1, 1);
         $box = new BoundingBox(0, 0, 2, 2);
         $checkBox = static fn(BoundingBoxInterface $box): bool => $box->contains(point: $point);
-        $checkPolygon = static fn(PolygonInterface $polygon): bool => $polygon->containsGeoPoint(p: $point);
+        $checkPolygon = static fn(PolygonInterface $polygon): bool => $polygon->containsGeoPoint(point: $point);
         self::assertTrue($checkBox($box));
         self::assertTrue($checkPolygon($box->getPolygon()));
     }

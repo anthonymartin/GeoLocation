@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AnthonyMartin\GeoLocation;
 
+use AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface;
+use AnthonyMartin\GeoLocation\Interfaces\PolygonInterface;
 use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 use AnthonyMartin\GeoLocation\Exceptions\OutOfBoundsException;
 
@@ -99,17 +101,17 @@ readonly class GeoPoint implements Interfaces\GeoPointInterface {
      * Great-circle distance using a spherical Earth and the haversine formula.
      * @param string $unit_of_measurement
      */
-    public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
+    public function distanceTo(GeoPointInterface $geopoint, mixed $unit_of_measurement): float {
         $radius = Earth::getRadius($unit_of_measurement);
-        $latitudeTerm = sin(($geopoint->radLat - $this->radLat) / 2);
-        $longitudeTerm = sin(($geopoint->radLon - $this->radLon) / 2);
+        $latitudeTerm = sin(($geopoint->getLatitude(true) - $this->radLat) / 2);
+        $longitudeTerm = sin(($geopoint->getLongitude(true) - $this->radLon) / 2);
         $haversine = $latitudeTerm * $latitudeTerm +
-            cos($this->radLat) * cos($geopoint->radLat) * $longitudeTerm * $longitudeTerm;
+            cos($this->radLat) * cos($geopoint->getLatitude(true)) * $longitudeTerm * $longitudeTerm;
         $haversine = max(0.0, min(1.0, $haversine));
         return 2 * atan2(sqrt($haversine), sqrt(1 - $haversine)) * $radius;
     }
 
-    public function inPolygon(Polygon $polygon): bool { return $polygon->containsGeoPoint($this); }
+    public function inPolygon(PolygonInterface $polygon): bool { return $polygon->containsGeoPoint($this); }
     public function getLatitude(bool $inRadians = false): float { return $inRadians ? $this->radLat : $this->degLat; }
     public function getLongitude(bool $inRadians = false): float { return $inRadians ? $this->radLon : $this->degLon; }
     public function getRadLat(): float { return $this->radLat; }

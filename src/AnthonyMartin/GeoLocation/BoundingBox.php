@@ -3,7 +3,7 @@
 declare(strict_types=1);
 namespace AnthonyMartin\GeoLocation;
 
-use AnthonyMartin\GeoLocation\Earth;
+use AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface;
 use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 use AnthonyMartin\GeoLocation\Exceptions\InvalidBoundingBoxCoordinatesException;
 
@@ -50,7 +50,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
    * @param int|float|numeric-string $distance
    * @param string $unit_of_measurement
    */
-  public static function fromGeoPoint(GeoPoint $geopoint, mixed $distance, mixed $unit_of_measurement): BoundingBox {
+  public static function fromGeoPoint(GeoPointInterface $geopoint, mixed $distance, mixed $unit_of_measurement): BoundingBox {
 		$radius = Earth::getRadius($unit_of_measurement);
 		if (!is_numeric($distance) || !is_finite((float) $distance) || $distance < 0) {
       throw new InvalidArgumentException('Bounding box distance must be a finite number greater than or equal to 0.');
@@ -163,7 +163,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
    *
    * @return bool
    */
-  public function contains(GeoPoint $point): bool
+  public function contains(GeoPointInterface $point): bool
   {
     $latitude = $point->getLatitude();
     if ($latitude < $this->minLat || $latitude > $this->maxLat) {
@@ -191,11 +191,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
    * @return Polygon from bounding box coordinates
    */
   public function getPolygon(): Polygon {
-    $polygon = new Polygon();
-    foreach($this->getPerimeter() as $vertex) {
-      $polygon->addVertex($vertex);
-    }
-    return $polygon;
+    return new Polygon(...$this->getPerimeter());
   }
 
   /**

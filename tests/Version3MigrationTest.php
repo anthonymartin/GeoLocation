@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 use AnthonyMartin\GeoLocation\BoundingBox;
 use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface;
 use AnthonyMartin\GeoLocation\GoogleGeocoder;
 use AnthonyMartin\GeoLocation\Polygon;
 use AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface;
 use PHPUnit\Framework\TestCase;
 
 readonly class Version3Point extends GeoPoint {
-    public function distanceTo(GeoPoint $geopoint, mixed $unit_of_measurement): float {
+    public function distanceTo(GeoPointInterface $geopoint, mixed $unit_of_measurement): float {
         return parent::distanceTo($geopoint, $unit_of_measurement);
     }
 
@@ -118,7 +119,7 @@ class Version3MigrationTest extends TestCase {
     }
 
     public function testInterfacesNeverConstrainConstructors(): void {
-        foreach (['GeoPointInterface', 'BoundingBoxInterface', 'Polygon'] as $name) {
+        foreach (['GeoPointInterface', 'BoundingBoxInterface', 'PolygonInterface'] as $name) {
             $interface = new ReflectionClass('AnthonyMartin\\GeoLocation\\Interfaces\\' . $name);
             $this->assertFalse($interface->hasMethod('__construct'));
             foreach ($interface->getMethods() as $method) {
