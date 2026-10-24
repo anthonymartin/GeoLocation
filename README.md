@@ -380,3 +380,9 @@ assert($isInside($circle->boundingBox()->getPolygon()));
 
 A circle tests actual spherical distance. Its bounding box also includes corners
 outside that radius. Circle centers are immutable snapshots of the supplied point.
+
+`Earth::RADIUS_KM` and `RADIUS_MI` are typed spherical radii; `WGS84_A` (meters)
+and `WGS84_F` describe the reference ellipsoid. Use `Earth::getMINLAT()` /
+`getMAXLAT()` / `getMINLON()` / `getMAXLON()` for radian bounds. The old writable
+bound properties are now typed floats and deprecated for removal in 4.0. This
+deprecation applies only to 3.x; the supported 2.x APIs are unchanged.

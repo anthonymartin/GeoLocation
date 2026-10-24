@@ -31,12 +31,13 @@ Applications using `^2.0` remain on 2.x.
   exception and `InvalidUnitException` extend the library argument exception.
   `ExceptionInterface` remains the common catch type.
 - Initialize Earth's existing writable latitude/longitude bounds in radians
-  instead of null.
+  instead of null; type them as floats. Deprecate these writable properties for
+  removal in 4.0 in favor of the bound getters. Add typed radius and WGS-84 constants.
 
 ### Validation and documentation
 
 - Check library source and independent interface implementations with PHPStan
-  level 8 without a baseline. Execute README examples with mocked geocoding in CI.
+  at maximum level without a baseline; enforce layer boundaries and Core purity. Execute README examples with mocked geocoding in CI.
 - Add a quick start, API reference, provider/test-double example, and migration
   examples covering immutable geometry, types, and interface contracts.
 - Test PHP 8.3–8.5, including clean geometry installations without cURL.
