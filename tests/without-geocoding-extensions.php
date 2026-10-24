@@ -29,5 +29,15 @@ try {
         throw new RuntimeException('Missing extension error must name ' . $missing);
     }
 }
+if (!interface_exists('Psr\\Http\\Client\\ClientInterface')) {
+    try {
+        class_exists('AnthonyMartin\\GeoLocation\\Geocoding\\CurlClient');
+        throw new RuntimeException('Optional PSR adapter must report its missing interfaces.');
+    } catch (UnexpectedResponseException $exception) {
+        if (strpos($exception->getMessage(), 'psr/http-client') === false) {
+            throw new RuntimeException('Missing PSR error must identify the package.');
+        }
+    }
+}
 restore_error_handler();
 echo 'Geometry and missing-extension handling passed on PHP ' . PHP_VERSION . ".\n";

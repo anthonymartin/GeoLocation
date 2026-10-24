@@ -1,17 +1,18 @@
 deptrac:
-  paths: [src]
+  paths: [src, vendor/psr/http-client/src, vendor/psr/http-factory/src, vendor/psr/http-message/src]
   analyser:
-    types: [class, use, function_call]
+    types: [class, use, file, function_call]
   ignore_uncovered_internal_classes: false
   layers:
     - name: Core
       collectors:
         - type: classLike
-          value: '^AnthonyMartin\\GeoLocation\\(?!(Geodesy|Format|Sql|Index|Geocoding|Laravel)\\|GoogleGeocoder$)'
-    # Temporary namespace exception until CDZI-075 moves the adapter.
+          value: '^AnthonyMartin\\GeoLocation\\(?!(Geodesy|Format|Sql|Index|Geocoding|Laravel)\\)'
     - name: Geocoding
       collectors:
-        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\(Geocoding\\|GoogleGeocoder$)' }
+        - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\(Geocoding\\)' }
+        # Declaration-only root alias belongs to the adapter layer.
+        - { type: directory, value: 'src/AnthonyMartin/GeoLocation/(Geocoding/.*|GoogleGeocoder\.php)$' }
     - name: Geodesy
       collectors:
         - { type: classLike, value: '^AnthonyMartin\\GeoLocation\\Geodesy\\' }
@@ -37,6 +38,7 @@ deptrac:
       collectors:
         - { type: interface, value: '^Psr\\' }
   ruleset:
+    PSR: [PHP]
     Core: [PHP]
     Geodesy: [Core, PHP, PSR]
     Format: [Core, PHP, PSR]

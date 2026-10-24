@@ -87,5 +87,8 @@ final readonly class OtherBox implements BoundingBoxInterface {
 }
 
 final class OtherGeocoder implements Geocoder {
+    /** @return list<\AnthonyMartin\GeoLocation\Interfaces\GeocodingResultInterface> */
+    public function geocodeAll(string $address): array {return [new \AnthonyMartin\GeoLocation\Geocoding\GeocodingResult($this->geocode($address),$address)];}
+    public function reverse(GeoPointInterface $point): \AnthonyMartin\GeoLocation\Interfaces\GeocodingResultInterface {return new \AnthonyMartin\GeoLocation\Geocoding\GeocodingResult($point,'Office');}
     public function geocode(string $address): OtherPoint { return new OtherPoint(1, 1); }
 }

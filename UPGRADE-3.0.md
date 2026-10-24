@@ -130,7 +130,7 @@ $response = GeoLocation::getGeocodeFromGoogle($address, $apiKey);
 After:
 
 ```php
-use AnthonyMartin\GeoLocation\GoogleGeocoder;
+use AnthonyMartin\GeoLocation\Geocoding\GoogleGeocoder;
 use AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface;
 
 try {
@@ -265,3 +265,8 @@ Custom implementations must match the new signatures and documented contracts;
 subclassing the bundled geometry classes is no longer necessary. Constructors
 remain absent from all interfaces. These changes apply only to 3.x; 2.x APIs
 remain supported as-is.
+
+The geocoder interface also requires `geocodeAll()` and `reverse()`. Results implement
+`Interfaces\GeocodingResultInterface`; use `Geocoding\Testing\ArrayGeocoder` in tests.
+The old root GoogleGeocoder is an alias scheduled for removal in 4.0. None of these
+3.x changes deprecate or change the supported 2.x APIs.

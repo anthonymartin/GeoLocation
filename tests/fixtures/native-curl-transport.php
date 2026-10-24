@@ -1,9 +1,10 @@
 <?php
 
-namespace AnthonyMartin\GeoLocation {
+namespace AnthonyMartin\GeoLocation\Geocoding {
   // Namespace-level functions exercise the actual transport without a network
   // request or a Google API key. Every request is an explicit local fixture.
   class GeocodingCurlFixture {
+    public static $headerLines;
     public static $body;
     public static $httpStatus;
     public static $error;
@@ -18,6 +19,7 @@ namespace AnthonyMartin\GeoLocation {
     public static $objectHandle;
 
     public static function reset() {
+      self::$headerLines = [];
       self::$body = '{"status":"OK","results":[{"geometry":{"location":{"lat":40.5,"lng":-74.4}}}]}';
       self::$httpStatus = 200;
       self::$error = '';
@@ -55,6 +57,9 @@ namespace AnthonyMartin\GeoLocation {
 
   function curl_exec($handle) {
     GeocodingCurlFixture::$events[] = 'execute';
+    foreach (GeocodingCurlFixture::$headerLines as $line) {
+      (GeocodingCurlFixture::$options[CURLOPT_HEADERFUNCTION])($handle, $line);
+    }
     if (GeocodingCurlFixture::$executeError) {
       throw new \Error('Transport engine error');
     }
