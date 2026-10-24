@@ -39,6 +39,16 @@ final readonly class OtherPoint implements GeoPointInterface {
 }
 
 final readonly class OtherPolygon implements PolygonInterface {
+    public static function fromGeoPoints(iterable $points): self { return new self(...Polygon::fromGeoPoints($points)->getVertices()); }
+    public function area(string $unit): float { return (new Polygon(...$this->vertices))->area($unit); }
+    public function perimeter(string $unit): float { return (new Polygon(...$this->vertices))->perimeter($unit); }
+    public function centroid(): GeoPointInterface { return (new Polygon(...$this->vertices))->centroid(); }
+    public function simplify(float $toleranceMeters): self { return new self(...(new Polygon(...$this->vertices))->simplify($toleranceMeters)->getVertices()); }
+    public function isValid(): bool { return (new Polygon(...$this->vertices))->isValid(); }
+    public function validationErrors(): array { return (new Polygon(...$this->vertices))->validationErrors(); }
+    public function isClockwise(): bool { return (new Polygon(...$this->vertices))->isClockwise(); }
+    public function reversed(): self { return new self(...array_reverse($this->vertices)); }
+    public function containsSpherical(GeoPointInterface $point): bool { return (new Polygon(...$this->vertices))->containsSpherical($point); }
     public function contains(GeoPointInterface $point): bool { return $this->containsGeoPoint($point); }
     public function boundingBox(): BoundingBoxInterface { return (new Polygon(...$this->vertices))->boundingBox(); }
     /** @var list<OtherPoint> */
