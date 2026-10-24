@@ -34,13 +34,63 @@ Applications using `^2.0` remain on 2.x.
   instead of null; type them as floats. Deprecate these writable properties for
   removal in 4.0 in favor of the bound getters. Add typed radius and WGS-84 constants.
 
+### Core geometry
+
+- Add `Region` with `contains()` and `boundingBox()`, implemented by boxes,
+  polygons and immutable `Circle`; expose `GeoPoint::circle()`.
+- Add spherical bearings, destinations, midpoints, interpolation and antipode
+  detection, with explicit errors for undefined coincident/antipodal bearings.
+- Add polygon spherical area, closed perimeter, vertex-mean centroid, bulk iterable
+  construction, planar validity/orientation, immutable reversal and meter-based
+  simplification. `PolygonInterface` exposes the new contracts.
+- Add opt-in spherical winding containment for simple minor-arc rings, including
+  poles and the antimeridian. Existing planar containment/envelopes are unchanged.
+  Ambiguous antipodal edges and hemispheres throw; spherical area is not ellipsoidal.
+
+### Geodesy
+
+- Add `Geodesic`, `Ellipsoid`, `GeodesicResult` and a bounded Vincenty direct/inverse
+  solver, with WGS-84/GRS80 definitions and exact international-mile conversion.
+- Verify 1,000 published reference cases. Inverse solutions reject points within
+  2° of the antipode and throw on nonconvergence; there is no silent fallback.
+  Karney is not included in this release.
+
+### SQL, formats and indexing
+
+- Add parameterized MySQL/PostgreSQL/SQLite proximity fragments, safe identifier
+  quoting, named or positional bindings, clamped haversine expressions and explicit
+  candidate-only flags for polygon/custom-region bounding filters. No database I/O.
+- Add GeoJSON and WKT point/single-ring polygon codecs with explicit coordinate
+  order and validation. GeoJSON can encode wrapped boxes and approximated circles
+  as MultiPolygon for map clients; multipart decoding, holes and altitude throw.
+- Add 1–12-character geohashes, cell centers/boxes, conventional grid neighbors,
+  radius precision selection, and bounded coverage with pre-allocation size checks.
+
+### Geocoding
+
+- Move Google into `Geocoding` and add Nominatim, reverse geocoding, multiple
+  candidates, immutable result metadata and provider-independent interfaces.
+- Support optional PSR-18 clients and PSR-17 factories, a native cURL fallback,
+  a PSR-compatible `CurlClient`, and the in-memory `Testing\ArrayGeocoder`.
+- Surface not-found and rate-limit exceptions, validate provider payloads,
+  preserve transport exception inheritance, encode parameters and enforce native
+  5-second connection / 10-second total timeouts. Injected clients own their limits.
+- Deprecate the root `GoogleGeocoder` compatibility alias for removal in 4.0.
+  The other 3.x deprecation is Earth's writable bound statics; neither affects 2.x.
+
 ### Validation and documentation
 
-- Check library source and independent interface implementations with PHPStan
-  at maximum level without a baseline; enforce layer boundaries and Core purity. Execute README examples with mocked geocoding in CI.
-- Add a quick start, API reference, provider/test-double example, and migration
-  examples covering immutable geometry, types, and interface contracts.
-- Test PHP 8.3–8.5, including clean geometry installations without cURL.
+- Enforce inward layer dependencies with Deptrac, pure geometry/outer math with
+  AST checks, and PHPStan at maximum level without a baseline.
+- Split README into five core examples and linked topic guides. Update migration
+  signatures and execute all README, migration and topic-guide PHP examples in CI.
+- Add reproducible benchmarks for haversine, Vincenty and shape containment,
+  recording the measured environment and avoiding a nonexistent Karney comparison.
+- Test PHP 8.3–8.5, including clean production installs without cURL/PSR packages.
+  Keep all applicable regression coverage; the superseded unpublished draft does
+  not impose a separate 3.0-to-3.1 compatibility contract.
+- Record Laravel as a future separate integration package and park the two
+  deprecated APIs and spherical Region default discussion for 4.0.
 
 ### Retained behavior and support
 

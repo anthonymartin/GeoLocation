@@ -43,7 +43,7 @@
         "test": "phpunit --bootstrap vendor/autoload.php tests",
         "test:no-bcmath": "@php -n tests/without-bcmath.php",
         "analyse": "phpstan analyse --no-progress",
-        "test:readme": "@php tests/readme-examples.php",
+        "test:readme": "@php -d zend.assertions=1 tests/readme-examples.php",
         "architecture": [
             "deptrac analyse --config-file=deptrac.yaml --no-progress --fail-on-uncovered",
             "@php tools/check-core-purity.php"
