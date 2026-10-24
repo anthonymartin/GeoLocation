@@ -1,35 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AnthonyMartin\GeoLocation;
 
 use AnthonyMartin\GeoLocation\Exceptions\CurlErrorException;
 use AnthonyMartin\GeoLocation\Exceptions\NoApiKeyException;
 use AnthonyMartin\GeoLocation\Exceptions\UnexpectedResponseException;
 
-/**
- * Shared Google Geocoding transport for the current and legacy APIs.
- *
- * @internal
- */
+/** Google geocoding adapter. Geometry classes do not depend on this service. */
 class GoogleGeocoder {
-
-  /**
-   * Return the complete response after validating its first result.
-   * Google orders results by relevance; GeoPoint::fromAddress uses the first.
-   *
-   * @param string $address
-   * @param string $apiKey
-   * @return \stdClass
-   * @throws NoApiKeyException
-   * @throws CurlErrorException
-   * @throws UnexpectedResponseException
-   */
-  public static function geocode($address, $apiKey=null) {
-    if (!$apiKey) {
+  public function __construct(private readonly string $apiKey) {
+    if ($apiKey === '') {
       throw new NoApiKeyException();
     }
+  }
 
-    list($body, $httpStatus) = self::transport($address, $apiKey);
+  /** Resolve Google's first result, including partial matches, or throw. */
+  public function geocode(string $address): GeoPoint {
+    list($body, $httpStatus) = $this->transport($address);
     if ($httpStatus < 200 || $httpStatus >= 300) {
       throw new UnexpectedResponseException('Google geocoding returned HTTP status ' . $httpStatus . '.');
     }
@@ -64,25 +53,10 @@ class GoogleGeocoder {
       throw new UnexpectedResponseException('Google geocoding first result has invalid coordinates.');
     }
 
-    return $response;
+    return new GeoPoint($location->lat, $location->lng);
   }
 
-  /**
-   * Return the raw decoded body, including API errors and non-object JSON.
-   * Legacy callers inspect the response themselves; transport failures are null.
-   *
-   * @return mixed
-   */
-  public static function request($address, $apiKey=null) {
-    try {
-      list($body, $httpStatus) = self::transport($address, $apiKey);
-    } catch (\Exception $exception) {
-      return null;
-    }
-    return json_decode($body);
-  }
-
-  private static function transport($address, $apiKey) {
+  private function transport(string $address): array {
     if (!function_exists('curl_init')) {
       throw new UnexpectedResponseException('Google geocoding requires the cURL extension.');
     }
@@ -90,14 +64,12 @@ class GoogleGeocoder {
       throw new UnexpectedResponseException('Google geocoding requires the JSON extension.');
     }
     $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' .
-      rawurlencode($address) . '&key=' . rawurlencode((string) $apiKey);
+      rawurlencode($address) . '&key=' . rawurlencode($this->apiKey);
     $handle = curl_init();
     if ($handle === false) {
       throw new CurlErrorException('Unable to initialize cURL for Google geocoding.');
     }
 
-    // Close before parsing or throwing response errors. Avoid finally so the
-    // runtime remains compatible with PHP 5.4.
     try {
       $options = array(
         CURLOPT_URL => $url,
@@ -113,11 +85,11 @@ class GoogleGeocoder {
       $body = curl_exec($handle);
       $error = ($body === false) ? curl_error($handle) : '';
       $httpStatus = curl_getinfo($handle, CURLINFO_HTTP_CODE);
-    } catch (\Exception $exception) {
-      self::close($handle);
-      throw $exception;
+    } finally {
+      // PHP 8 releases CurlHandle when its final reference is dropped.
+      // curl_close() is a deprecated no-op on PHP 8.5.
+      $handle = null;
     }
-    self::close($handle);
 
     if ($body === false) {
       throw new CurlErrorException($error !== '' ? $error : 'Google geocoding request failed.');
@@ -125,12 +97,4 @@ class GoogleGeocoder {
     return array($body, $httpStatus);
   }
 
-  private static function close(&$handle) {
-    // PHP 5/7 use resources. PHP 8 releases CurlHandle objects when their last
-    // reference is dropped; curl_close is a no-op and deprecated in PHP 8.5.
-    if (is_resource($handle)) {
-      curl_close($handle);
-    }
-    $handle = null;
-  }
 }

@@ -1,9 +1,9 @@
 <?php
 
-// PHP 5.4-compatible checks: no PHPUnit or optional extension is needed.
+// Standalone geometry and geocoding checks without optional extension functions.
 require_once __DIR__ . '/runtime-bootstrap.php';
 
-use AnthonyMartin\GeoLocation\GeoLocation;
+use AnthonyMartin\GeoLocation\GoogleGeocoder;
 use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\Exceptions\UnexpectedResponseException;
 
@@ -20,11 +20,8 @@ if ($point->distanceTo($point, 'km') !== 0.0 || !$box->contains($point) ||
     !$point->inPolygon($box->getPolygon())) {
     throw new RuntimeException('Geometry must work without geocoding extensions.');
 }
-if (GeoLocation::getGeocodeFromGoogle('address', 'key') !== null) {
-    throw new RuntimeException('Legacy geocoding must return null without extensions.');
-}
 try {
-    GeoPoint::fromAddress('address', 'key');
+    (new GoogleGeocoder('key'))->geocode('address');
     throw new RuntimeException('Modern geocoding must report the missing extension.');
 } catch (UnexpectedResponseException $exception) {
     $missing = function_exists('curl_init') ? 'JSON' : 'cURL';

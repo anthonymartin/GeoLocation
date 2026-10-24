@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace AnthonyMartin\GeoLocation;
 
 use AnthonyMartin\GeoLocation\Earth;
@@ -7,14 +9,14 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidBoundingBoxCoordinatesException;
 
 class BoundingBox implements Interfaces\BoundingBoxInterface {
 
-  protected $minLon;
-  protected $minLat;
-  protected $maxLon;
-  protected $maxLat;
-  protected $GeoPoints = [];
+  protected float $minLon;
+  protected float $minLat;
+  protected float $maxLon;
+  protected float $maxLat;
+  protected array $GeoPoints = [];
 
 
-  public function __construct($minLat, $minLon, $maxLat, $maxLon, $inRadians=false)
+  public function __construct(mixed $minLat, mixed $minLon, mixed $maxLat, mixed $maxLon, bool $inRadians=false)
   {
     foreach (array($minLat, $minLon, $maxLat, $maxLon) as $coordinate) {
       if (!is_numeric($coordinate) || !is_finite((float) $coordinate)) {
@@ -24,53 +26,22 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     if ($minLat > $maxLat) {
       throw new InvalidBoundingBoxCoordinatesException('Minimum latitude must not exceed maximum latitude.');
     }
-    $this->minLat = ($inRadians) ? rad2deg($minLat) : $minLat;
-    $this->minLon = ($inRadians) ? rad2deg($minLon) : $minLon;
-    $this->maxLat = ($inRadians) ? rad2deg($maxLat) : $maxLat;
-    $this->maxLon = ($inRadians) ? rad2deg($maxLon) : $maxLon;
+    $this->minLat = ($inRadians) ? rad2deg((float) $minLat) : (float) $minLat;
+    $this->minLon = ($inRadians) ? rad2deg((float) $minLon) : (float) $minLon;
+    $this->maxLat = ($inRadians) ? rad2deg((float) $maxLat) : (float) $maxLat;
+    $this->maxLon = ($inRadians) ? rad2deg((float) $maxLon) : (float) $maxLon;
     $this->GeoPoints[] = new GeoPoint($minLat, $minLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($minLat, $maxLon, $inRadians);
-    $this->GeoPoints[] = new GeoPoint($maxLat, $minLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($maxLat, $maxLon, $inRadians);
+    $this->GeoPoints[] = new GeoPoint($maxLat, $minLon, $inRadians);
   }
 
 
   /**
-   * <p>Computes the bounding coordinates of all points on the surface
-   * of a sphere that have a great circle distance to the point represented
-   * by this GeoLocation instance that is less or equal to the distance
-   * argument.</p>
-   * <p>For more information about the formulae used in this method visit
-   * <a href="http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates">
-   * http://JanMatuschek.de/LatitudeLongitudeBoundingCoordinates</a>.</p>
-   *
-   * @param double $distance the distance from the point represented by this
-   * GeoLocation instance. Must me measured in the same unit as the radius
-   * argument.
-   * @param string $unit_of_measurement
-   * @throws \Exception
-   * @internal param radius the radius of the sphere, e.g. the average radius for a
-   * spherical approximation of the figure of the Earth is approximately
-   * 6371.01 kilometers.
-   * @return GeoLocation[] an array of two GeoLocation objects such that:<ul>
-   * <li>The latitude of any point within the specified distance is greater
-   * or equal to the latitude of the first array element and smaller or
-   * equal to the latitude of the second array element.</li>
-   * <li>If the longitude of the first array element is smaller or equal to
-   * the longitude of the second element, then
-   * the longitude of any point within the specified distance is greater
-   * or equal to the longitude of the first array element and smaller or
-   * equal to the longitude of the second array element.</li>
-   * <li>If the longitude of the first array element is greater than the
-   * longitude of the second element (this is the case if the 180th
-   * meridian is within the distance), then
-   * the longitude of any point within the specified distance is greater
-   * or equal to the longitude of the first array element
-   * <strong>or</strong> smaller or equal to the longitude of the second
-   * array element.</li>
-   * </ul>
+   * Enclose a nonnegative great-circle search radius in a latitude/longitude box.
+   * The box can include points farther from the center than the radius.
    */
-  public static function fromGeoPoint(GeoPoint $geopoint, $distance, $unit_of_measurement) {
+  public static function fromGeoPoint(GeoPoint $geopoint, mixed $distance, mixed $unit_of_measurement): BoundingBox {
 		$radius = Earth::getRadius($unit_of_measurement);
 		if (!is_numeric($distance) || !is_finite((float) $distance) || $distance < 0) {
       throw new InvalidArgumentException('Bounding box distance must be a finite number greater than or equal to 0.');
@@ -107,75 +78,74 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     return new BoundingBox($minLat, $minLon, $maxLat, $maxLon, true);
   }
   /**
-   * @return float|int|string
+   * @return float
    */
-  public function getMinLongitude()
+  public function getMinLongitude(): float
   {
     return $this->minLon;
   }
 
   /**
-   * @return float|int|string
+   * @return float
    */
-  public function getMinLatitude()
+  public function getMinLatitude(): float
   {
     return $this->minLat;
   }
 
   /**
-   * @return float|int|string
+   * @return float
    */
-  public function getMaxLongitude()
+  public function getMaxLongitude(): float
   {
     return $this->maxLon;
   }
 
   /**
-   * @return float|int|string
+   * @return float
    */
-  public function getMaxLatitude()
+  public function getMaxLatitude(): float
   {
     return $this->maxLat;
   }
 
   /**
-   * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
+   * Perimeter corner order: SW, SE, NE, NW.
    * @return GeoPoint[]
    */
-  public function getVertices()
+  public function getVertices(): array
   {
     return $this->GeoPoints;
   }
 
   /**
-   * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
+   * Perimeter corner order: SW, SE, NE, NW.
    * @return GeoPoint[]
    */
-  public function getGeoPoints()
+  public function getGeoPoints(): array
   {
     return $this->GeoPoints;
   }
 
   /** @return GeoPoint */
-  public function getSouthWest() { return $this->GeoPoints[0]; }
+  public function getSouthWest(): GeoPoint { return $this->GeoPoints[0]; }
 
   /** @return GeoPoint */
-  public function getSouthEast() { return $this->GeoPoints[1]; }
+  public function getSouthEast(): GeoPoint { return $this->GeoPoints[1]; }
 
   /** @return GeoPoint */
-  public function getNorthWest() { return $this->GeoPoints[2]; }
+  public function getNorthWest(): GeoPoint { return $this->GeoPoints[3]; }
 
   /** @return GeoPoint */
-  public function getNorthEast() { return $this->GeoPoints[3]; }
+  public function getNorthEast(): GeoPoint { return $this->GeoPoints[2]; }
 
   /**
    * Corners in perimeter order: SW, SE, NE, NW.
    * Antimeridian-crossing boxes still require contains() for containment.
    * @return GeoPoint[]
    */
-  public function getPerimeter() {
-    $vertices = $this->getVertices();
-    return array($vertices[0], $vertices[1], $vertices[3], $vertices[2]);
+  public function getPerimeter(): array {
+    return $this->getVertices();
   }
 
   /**
@@ -184,7 +154,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
    *
    * @return bool
    */
-  public function contains(GeoPoint $point)
+  public function contains(GeoPoint $point): bool
   {
     $latitude = $point->getLatitude();
     if ($latitude < $this->minLat || $latitude > $this->maxLat) {
@@ -200,7 +170,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     return abs($longitude) == 180 && $this->containsLongitude(-$longitude);
   }
 
-  protected function containsLongitude($longitude)
+  protected function containsLongitude(float $longitude): bool
   {
     if ($this->minLon <= $this->maxLon) {
       return $longitude >= $this->minLon && $longitude <= $this->maxLon;
@@ -211,7 +181,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   /**
    * @return Polygon from bounding box coordinates
    */
-  public function getPolygon() {
+  public function getPolygon(): Polygon {
     $polygon = new Polygon();
     foreach($this->getPerimeter() as $vertex) {
       $polygon->addVertex($vertex);
@@ -222,7 +192,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   /**
    * @return Polygon
    */
-  public function toPolygon() {
+  public function toPolygon(): Polygon {
     return $this->getPolygon();
   }
 

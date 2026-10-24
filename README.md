@@ -15,32 +15,45 @@ Installation and compatibility
 ========
 
 ```bash
-composer require anthonymartin/geo-location:^2.1.1
+composer require anthonymartin/geo-location:^3.0
 ```
 
-The library supports PHP 5.4 and later. The cURL and JSON extensions are needed
-only for Google geocoding; geometry functions work without them. BCMath is not
-required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
-case-insensitively. Both `distanceTo()` and `boundingBox()` require an explicit
-unit argument; neither has a default unit. Distances use a spherical Earth
-approximation.
+The library requires PHP 8.3 or later. Geometry needs neither cURL nor BCMath.
+Only `GoogleGeocoder` needs cURL; JSON is built into supported PHP versions.
+Upgrading from 2.x? Read [UPGRADE-3.0.md](UPGRADE-3.0.md) first. Applications on
+`^2.0` stay on 2.x, which retains PHP 5.4 support and receives security and bug
+fixes alongside 3.x, with no scheduled end-of-support date.
+
+Distances accept `km`, `kilometers`, `mi`, or `miles`, case-insensitively.
+`distanceTo()` and `boundingBox()` require an explicit unit and use a spherical
+Earth approximation.
 
 `new GeoPoint($latitude, $longitude, $inRadians = false)` takes latitude first,
-then longitude. By default the values are degrees, within ±90° latitude and
-±180° longitude. Pass `true` as the third argument to supply radians instead.
-`GeoPoint` accepts finite numeric values. Getters in the input unit preserve
-the original integer, float, or numeric-string value; converted coordinates
-are floats. Degree-mode `BoundingBox` getters preserve input types too.
-`getLatitude()` and `getLongitude()` return degrees; pass `true` to either getter
-for radians.
+then longitude. Degrees must be within ±90° latitude and ±180° longitude; pass
+`true` as the third argument for radians. Finite integers, floats, and numeric
+strings are accepted and normalized to floats. All coordinate getters return
+floats. `getLatitude()` and `getLongitude()` return degrees; pass `true` for radians.
 
-Use [Composer 2.2 LTS](https://getcomposer.org/download/) when installing on
-PHP 5.4–7.1.
+`GeoPoint` is immutable and declared `readonly`. To change a coordinate, assign
+the new point returned by `withLatitude()` or `withLongitude()`; the original
+point remains unchanged. Both methods accept `true` as their second argument
+for radian input.
+
+```php
+<?php
+require_once __DIR__ . '/vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+
+$original = new GeoPoint(40.5, -74.4);
+$moved = $original->withLatitude(41.0)->withLongitude(-73.5);
+// $original remains (40.5, -74.4); $moved is (41.0, -73.5).
+```
 
 Examples
 ========
 
-These examples use the v2.1.1 API. Save each PHP example in your application's
+These examples use the v3.0 API. Save each PHP example in your application's
 root directory, beside `vendor/`, after installing the package. Replace the
 API-key placeholder in geocoding examples with your Google API key.
 
@@ -62,24 +75,25 @@ $distance = $geopointA->distanceTo($geopointB, 'miles'); // approximately 25.888
 Get latitude and longitude from address or location
 --------------------------------------------------------
 Follow Google's [Geocoding API setup guide](https://developers.google.com/maps/documentation/geocoding/get-api-key)
-to configure billing, enable the API, and create an API key. `GeoPoint::fromAddress($address, $apiKey = null)`
-is static and returns a `GeoPoint`. An API key is required: omitting it throws
-`NoApiKeyException`.
+to configure billing, enable the API, and create an API key. `GoogleGeocoder::geocode(string $address): GeoPoint`
+returns a `GeoPoint`. Construct the geocoder with your API key; an empty key
+throws `NoApiKeyException`.
 
 ```php
 <?php
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\GoogleGeocoder;
 
-$geopoint = GeoPoint::fromAddress('New York, NY 10001', 'google-api-key-goes-here');
+$geocoder = new GoogleGeocoder('google-api-key-goes-here');
+$geopoint = $geocoder->geocode('New York, NY 10001');
 $latitude = $geopoint->getLatitude();
 $longitude = $geopoint->getLongitude();
 
 ```
 
-`fromAddress()` uses the first result returned by Google, including a partial
+`geocode()` uses the first result returned by Google, including a partial
 match. It does not disambiguate addresses. Requests have a 5-second connection
 timeout and a 10-second total timeout. Transport failures, HTTP errors, malformed
 responses, and Google statuses such as `ZERO_RESULTS` produce descriptive
@@ -178,15 +192,15 @@ SW, SE, NE, NW order. `getPerimeter()` returns the four `GeoPoint` corners in
 that same ring order. For a single corner, use `getSouthWest()`, `getSouthEast()`,
 `getNorthWest()`, or `getNorthEast()`.
 
-`getVertices()` and `getGeoPoints()` retain the 2.0.1 order: SW, SE, NW, NE.
-That is not a perimeter; use `getPolygon()` or `getPerimeter()` when building
-polygons. Version 2.1.0 changed these indexes unintentionally; 2.1.1 restores them.
+`getVertices()` and `getGeoPoints()` also return SW, SE, NE, NW perimeter order
+in 3.0. Use named getters when selecting individual corners; 2.x used a different
+index order (SW, SE, NW, NE).
 For a box that does not cross the antimeridian, pass the returned polygon to
 `$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
 the antimeridian, use `$boundingBox->contains($geopointA)` instead.
 
 
-Exceptions and legacy API
+Exceptions
 --------
 All library exceptions implement `AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface`:
 
@@ -195,58 +209,39 @@ All library exceptions implement `AnthonyMartin\GeoLocation\Exceptions\Exception
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use AnthonyMartin\GeoLocation\GeoPoint;
+use AnthonyMartin\GeoLocation\GoogleGeocoder;
 
 try {
-  $point = GeoPoint::fromAddress('New York', 'your-api-key');
+  $point = (new GoogleGeocoder('your-api-key'))->geocode('New York');
 } catch (\AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface $error) {
   echo $error->getMessage();
 }
 ```
 
-Invalid units throw `Exceptions\InvalidUnitException`, which extends PHP's
-`\InvalidArgumentException`. The other library exception classes extend the
-library's `Exceptions\Exception` base. Use `ExceptionInterface` to catch both
-families. `CurlErrorException` extends `UnexpectedResponseException`, so existing
-`fromAddress()` error catches also handle transport failures.
+`Exceptions\InvalidArgumentException` extends PHP's `\InvalidArgumentException`;
+`InvalidUnitException` extends the library argument exception. Other library
+exception classes retain the `Exceptions\Exception` base. Catch
+`ExceptionInterface` for both families. `CurlErrorException` extends
+`UnexpectedResponseException`, so geocoding failure catches include transport errors.
+Native PHP argument/type errors follow PHP's normal `TypeError` behavior.
 
-The `GeoLocation` class remains available but is deprecated in favor of
-`GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method returns Google's raw, unvalidated decoded response
-(including API error statuses), or `null` on transport/JSON failure; `getAngular()` is zero until a bounding
-radius is calculated.
+The legacy `GeoLocation` class, `GeoLocationInterface`, point setters, and
+`GeoPoint::fromAddress()` were removed. Their replacements and native interface
+signatures are described in [UPGRADE-3.0.md](UPGRADE-3.0.md).
 
 Running Tests
 --------
-Run these commands from the root of a checkout of this repository.
-Full development tests require PHP 7.3 or later. Composer selects PHPUnit 9.6
-on older development runtimes and PHPUnit 12.5 on PHP 8.3 or later:
+Run these commands from the root of a repository checkout on PHP 8.3 or later:
 
 ```bash
-composer update
+composer install
 composer test
 composer test:no-bcmath
 ```
 
-The committed lock file records the modern development environment. On older
-PHP versions, install production dependencies with `composer install --no-dev`
-(using Composer 2.2 on PHP 5.4–7.1), then run the standalone runtime checks:
-
-```bash
-php tests/legacy-runtime.php
-php tests/backward-compatibility-runtime.php
-php -n tests/without-bcmath.php
-```
-
-CI runs the full suite on PHP 7.3–8.5 and runtime checks on PHP 5.4–7.2.
-The compatibility suite covers the 2.0.1 behaviors restored in 2.1.1. Additional
-jobs install and exercise geometry without cURL. To check a local runtime
-missing cURL or JSON, run `php tests/without-geocoding-extensions.php`.
-
-Version 2.1.0 users should upgrade to 2.1.1; see the [changelog](CHANGELOG.md)
-for restored behavior and retained validation/correctness fixes.
-
-
-
+CI tests PHP 8.3, 8.4, and 8.5, including geometry installation without cURL.
+Geocoding tests use local response fixtures and do not require an API key.
+The `2.x` branch retains its separate PHP 5.4–8.5 compatibility suite.
 
 Credits and Legal
 --------------------------------------------------------

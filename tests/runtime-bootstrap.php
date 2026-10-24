@@ -1,7 +1,6 @@
 <?php
 
-// Keep dependency-free runtime checks usable on the PHP 5.4 support floor.
-// PHPUnit's Composer dependencies intentionally require a newer PHP version.
+// Load the source directly for checks without PHPUnit or optional extensions.
 spl_autoload_register(function ($class) {
     $prefix = 'AnthonyMartin\\GeoLocation\\';
     if (strpos($class, $prefix) === 0) {

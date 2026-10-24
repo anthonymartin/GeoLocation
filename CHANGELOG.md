@@ -1,5 +1,63 @@
 # Changelog
 
+## 3.0.0 — 2026-10-24
+
+This major release changes public contracts intentionally. Read
+[UPGRADE-3.0.md](UPGRADE-3.0.md) before changing your Composer constraint.
+Applications using `^2.0` remain on 2.x.
+
+### Breaking changes
+
+- Require PHP 8.3 or later and add native parameter/return types to public
+  classes and interfaces. `GeoPoint` is a readonly class; its subclasses must
+  also be readonly and overrides must match the typed signatures.
+- Remove deprecated `GeoLocation` and `Interfaces\GeoLocationInterface`.
+- Make `GeoPoint` immutable: remove all four setters and add `withLatitude()`
+  and `withLongitude()`, which return a new point and accept degree or radian input.
+- Normalize validated coordinates to floats, including all point and box getters.
+- Return SW, SE, NE, NW perimeter order from box `getVertices()` and
+  `getGeoPoints()`. Named corner getters retain their meaning.
+- Remove `GeoPoint::fromAddress()` and the legacy raw geocoder. Expose
+  `(new GoogleGeocoder($apiKey))->geocode($address): GeoPoint` as the separate
+  Google adapter. Geometry has no cURL dependency; cURL remains a suggestion.
+- Make the library's `InvalidArgumentException` extend PHP's native argument
+  exception and `InvalidUnitException` extend the library argument exception.
+  `ExceptionInterface` remains the common catch type.
+
+### Retained behavior and support
+
+- Incomplete polygons still return `false`. Interfaces do not declare constructors.
+- Keep strict validation, haversine distances, inclusive/antimeridian-aware box
+  containment, proper polygon rings, and no BCMath dependency.
+- Geocoding still validates Google's first result, encodes URL parameters, uses
+  5-second connection/10-second total timeouts, and releases handles on failures.
+- Maintain `2.x` for PHP 5.4 users and applications not ready to migrate, with
+  security and bug fixes alongside 3.x, with no scheduled end-of-support date.
+- CI covers PHP 8.3–8.5 and clean geometry installations without cURL. The 2.x
+  compatibility suite remains on the maintenance branch.
+
+## 2.1.3 — 2026-10-24
+
+- Keep 2.x supported alongside 3.x with no scheduled end-of-support date.
+  This supersedes the 12-month period announced in 2.1.2. Upgrading to 3.0
+  is optional; `^2.0` continues to receive compatible 2.x releases.
+- Remove API deprecation annotations, including the legacy class annotation.
+  Existing 2.x APIs remain supported as-is; migration guidance applies only to
+  applications choosing 3.0. No runtime behavior changes.
+
+## 2.1.2 — 2026-10-23
+
+- Document the 3.0 migration before removing or changing APIs: legacy
+  `GeoLocation`/interface and geocoding, mutable point setters, indexed box
+  corner assumptions, input-type-preserving coordinate getters, and the
+  library base of `InvalidArgumentException`.
+- Announce native types and a PHP 8.3 minimum for 3.0. Keep PHP 5.4 support
+  and every 2.1.1 runtime behavior on the `2.x` maintenance branch. These are
+  docblock and documentation deprecations only, with no runtime warnings.
+- Maintain 2.x for security and bug fixes for 12 months after 3.0.0 ships.
+- Keep incomplete-polygon containment returning `false` and keep constructors
+  out of interfaces in both release lines.
+
 ## 2.1.1 — 2026-10-23
 
 Version 2.1.0 unintentionally changed public behaviors that worked in 2.0.1.

@@ -30,13 +30,13 @@ class GeometryRegressionTest extends TestCase
         $this->assertFalse($box->toPolygon()->containsGeoPoint(new GeoPoint(21, 35)));
     }
 
-    public function testLegacyCornerIndexesAndNamedGettersAgreeForOrdinaryAndWrappedBoxes()
+    public function testPerimeterIndexesAndNamedGettersAgreeForOrdinaryAndWrappedBoxes()
     {
         foreach (array(array(10, 30, 20, 40), array(-10, 170, 10, -170)) as $bounds) {
             $box = new BoundingBox($bounds[0], $bounds[1], $bounds[2], $bounds[3]);
             $expected = array(array($bounds[0], $bounds[1]), array($bounds[0], $bounds[3]),
-                array($bounds[2], $bounds[1]), array($bounds[2], $bounds[3]));
-            $names = array('getSouthWest', 'getSouthEast', 'getNorthWest', 'getNorthEast');
+                array($bounds[2], $bounds[3]), array($bounds[2], $bounds[1]));
+            $names = array('getSouthWest', 'getSouthEast', 'getNorthEast', 'getNorthWest');
             $vertices = $box->getVertices();
             foreach ($names as $index => $name) {
                 $corner = $box->$name();
@@ -45,7 +45,7 @@ class GeometryRegressionTest extends TestCase
                 $this->assertTrue($box->contains($corner));
             }
             $this->assertSame($vertices, $box->getGeoPoints());
-            $this->assertSame(array($vertices[0], $vertices[1], $vertices[3], $vertices[2]), $box->getPerimeter());
+            $this->assertSame(array($vertices[0], $vertices[1], $vertices[2], $vertices[3]), $box->getPerimeter());
             $this->assertSame($box->getPerimeter(), $box->getPolygon()->getVertices());
         }
     }
@@ -69,8 +69,8 @@ class GeometryRegressionTest extends TestCase
         $this->assertTrue($box->contains(new GeoPoint(45, 90)));
         $this->assertFalse($box->contains(new GeoPoint(46, 90)));
         $vertices = $box->getVertices();
-        $this->assertEquals(M_PI / 2, $vertices[3]->getLongitude(true));
-        $this->assertEquals(0, $vertices[2]->getLongitude(true));
+        $this->assertEquals(M_PI / 2, $vertices[2]->getLongitude(true));
+        $this->assertEquals(0, $vertices[3]->getLongitude(true));
     }
 
     public function testMalformedBoundingBoxCoordinatesThrowLibraryExceptions()
