@@ -73,9 +73,11 @@ class GeoPoint implements Interfaces\GeoPointInterface {
     return $polygon->containsGeoPoint($this);
   }
 
+  /** Input-type preservation is deprecated; 3.0 always returns float. */
   public function getLatitude($inRadians=false) {
     return (!$inRadians) ? $this->degLat : $this->radLat;
   }
+  /** Input-type preservation is deprecated; 3.0 always returns float. */
   public function getLongitude($inRadians=false) {
     return (!$inRadians) ? $this->degLon : $this->radLon;
   }
@@ -90,6 +92,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   /**
    * @param float|int|string $radLat
    */
+  /** @deprecated Removed in 3.0; assign the new point returned by withLatitude($value, true). */
   public function setRadLat($radLat)
   {
     self::normalizeCoordinate($radLat, 'Latitude', Earth::getMINLAT(), Earth::getMAXLAT());
@@ -108,6 +111,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   /**
    * @param float|int|string $radLon
    */
+  /** @deprecated Removed in 3.0; assign the new point returned by withLongitude($value, true). */
   public function setRadLon($radLon)
   {
     self::normalizeCoordinate($radLon, 'Longitude', Earth::getMINLON(), Earth::getMAXLON());
@@ -126,6 +130,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   /**
    * @param mixed $degLat
    */
+  /** @deprecated Removed in 3.0; assign the new point returned by withLatitude($value). */
   public function setDegLat($degLat)
   {
     self::normalizeCoordinate($degLat, 'Latitude', -90, 90);
@@ -144,6 +149,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
   /**
    * @param mixed $degLon
    */
+  /** @deprecated Removed in 3.0; assign the new point returned by withLongitude($value). */
   public function setDegLon($degLon)
   {
     self::normalizeCoordinate($degLon, 'Longitude', -180, 180);
@@ -183,6 +189,7 @@ class GeoPoint implements Interfaces\GeoPointInterface {
 
   /**
    * Create a point using the first result returned by Google, ordered by relevance.
+   * @deprecated In 3.0 use (new GoogleGeocoder($apiKey))->geocode($address).
    *
    * @param string $address
    * @param string $apiKey
