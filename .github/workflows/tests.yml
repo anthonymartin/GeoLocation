@@ -26,7 +26,8 @@ jobs:
       - run: composer validate --strict
       - run: composer test
       - run: composer test:readme
-      - run: composer analyse
+      - run: composer lint
+        if: matrix.php == '8.3'
       - run: composer test:no-bcmath
       - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l
 

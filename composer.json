@@ -33,15 +33,29 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^12.5",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "deptrac/deptrac": "^4.7"
     },
     "scripts": {
         "test": "phpunit --bootstrap vendor/autoload.php tests",
         "test:no-bcmath": "@php -n tests/without-bcmath.php",
         "analyse": "phpstan analyse --no-progress",
-        "test:readme": "@php tests/readme-examples.php"
+        "test:readme": "@php tests/readme-examples.php",
+        "architecture": [
+            "deptrac analyse --config-file=deptrac.yaml --no-progress --fail-on-uncovered",
+            "@php tools/check-core-purity.php"
+        ],
+        "lint": [
+            "@analyse",
+            "@architecture"
+        ]
     },
     "suggest": {
         "ext-curl": "Required only by GoogleGeocoder; geometry has no cURL dependency."
+    },
+    "config": {
+        "platform": {
+            "php": "8.3.0"
+        }
     }
 }
