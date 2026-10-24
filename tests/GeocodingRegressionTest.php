@@ -183,6 +183,8 @@ namespace {
         GeoPoint::fromAddress('address', 'key');
       }, CurlErrorException::class);
       $this->assertSame(GeocodingCurlFixture::$error, $exception->getMessage());
+      $this->assertInstanceOf(UnexpectedResponseException::class, $exception);
+      $this->assertInstanceOf(\AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface::class, $exception);
       $this->assertSame(array('execute', 'error', 'close'), GeocodingCurlFixture::$events);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }

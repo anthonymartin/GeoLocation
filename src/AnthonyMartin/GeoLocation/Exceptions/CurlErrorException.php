@@ -2,6 +2,6 @@
 
 namespace AnthonyMartin\GeoLocation\Exceptions;
 
-class CurlErrorException extends Exception
+class CurlErrorException extends UnexpectedResponseException
 {
 }
