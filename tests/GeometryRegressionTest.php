@@ -259,24 +259,23 @@ class GeometryRegressionTest extends TestCase
         }
     }
 
-    public function testIncompletePolygonsRejectContainmentButAllowConstruction()
+    public function testIncompletePolygonsReturnFalseWithoutWarnings()
     {
-        $point = new GeoPoint(1, 1);
-        $polygon = new Polygon();
-        for ($count = 0; $count < 3; $count++) {
-            try {
-                $polygon->containsGeoPoint($point);
-                $this->fail('An incomplete polygon allowed containment.');
-            } catch (InvalidArgumentException $exception) {
-                $this->assertNotEmpty($exception->getMessage());
+        set_error_handler(function ($severity, $message, $file, $line) {
+            throw new ErrorException($message, 0, $severity, $file, $line);
+        });
+        try {
+            $point = new GeoPoint(1, 1);
+            $polygon = new Polygon();
+            for ($count = 0; $count < 3; $count++) {
+                $this->assertFalse($point->inPolygon($polygon));
+                $this->assertFalse($polygon->containsGeoPoint($point));
+                $this->assertFalse(Polygon::pointInPolygon($point, $polygon));
+                $polygon->addVertex(new GeoPoint($count * 2, $count * 2));
             }
-            $polygon->addVertex(new GeoPoint($count, $count));
+            $this->assertCount(3, $polygon->getVertices());
+        } finally {
+            restore_error_handler();
         }
-        $this->assertCount(3, $polygon->getVertices());
-
-        $polygon = Polygon::fromArray(array(array(0, 0)));
-        $this->assertCount(1, $polygon->getVertices());
-        $this->expectException('AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException');
-        Polygon::pointInPolygon($point, $polygon);
     }
 }

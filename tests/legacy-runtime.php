@@ -46,11 +46,7 @@ checkRuntime((new BoundingBox(-1, 179, 1, -179))->contains(new GeoPoint(0, -180)
 checkRuntime(!($box->contains(new GeoPoint(3, 3))), 'Outside point accepted.');
 $nearEquator = Polygon::fromArray(array(array(-0.00001, 10), array(0.5, 11), array(1, 11), array(1, 10)));
 checkRuntime($nearEquator->containsGeoPoint(new GeoPoint(0.3, 10.1)), 'Near-equator polygon failed.');
-try {
-    (new Polygon())->containsGeoPoint(new GeoPoint(0, 0));
-    throw new RuntimeException('Empty polygon accepted.');
-} catch (ExceptionInterface $exception) {
-}
+checkRuntime(!(new Polygon())->containsGeoPoint(new GeoPoint(0, 0)), 'Empty polygon must return false.');
 try {
     Earth::getRadius(true);
     throw new RuntimeException('Boolean unit accepted.');

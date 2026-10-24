@@ -152,7 +152,7 @@ is added implicitly. `$point->inPolygon($polygon)` and
 `$polygon->containsGeoPoint($point)` both return a boolean.
 
 Polygons use planar ray casting: they must not cross the antimeridian and must
-have at least three vertices when tested. Boundary behavior is half-open, so
+return `false` for fewer than three vertices. Boundary behavior is half-open, so
 some edges are inside and others are outside. Use `BoundingBox::contains()` for
 inclusive box boundaries. Vertices can be added incrementally with `addVertex()`.
 
