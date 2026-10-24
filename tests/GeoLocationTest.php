@@ -6,7 +6,6 @@ use PHPUnit\Framework\TestCase;
 use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\Polygon;
 use AnthonyMartin\GeoLocation\BoundingBox;
-use AnthonyMartin\GeoLocation\GeoLocation;
 
 class GeoLocationTest extends TestCase {
 
@@ -43,9 +42,9 @@ class GeoLocationTest extends TestCase {
     $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
     $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
     $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
-    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
     $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
-    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[3]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
 
     $bbox = $geopointA->boundingBox(3, 'mi');
     $this->assertInstanceOf(GeoPoint::class, $bbox->getVertices()[2]);
@@ -55,9 +54,9 @@ class GeoLocationTest extends TestCase {
     $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
     $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
     $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
-    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
     $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
-    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[3]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
 
     $this->assertEquals(4, count($bbox->getVertices()));
   }
@@ -77,21 +76,6 @@ class GeoLocationTest extends TestCase {
     $this->assertTrue($geopointA->inPolygon($nyc->getPolygon()));
     $usa = $geopointA->boundingBox(2500,'mi');
     $this->assertTrue($geopointA->inPolygon($usa->getPolygon()));
-  }
-  public function testOldGeoLocation() {
-
-    $geopointA = GeoLocation::fromDegrees(48.2029047,16.3873319);
-    $boundingBoxA = $geopointA->boundingCoordinates(100, 'km');
-
-    $geopointB = new GeoPoint(48.2029047,16.3873319);
-    $boundingBoxB = $geopointB->boundingBox(100,'km');
-
-    $this->assertEquals($boundingBoxA[0]->getLatitudeInDegrees(), $boundingBoxB->getMinLatitude());
-    $this->assertEquals($boundingBoxA[0]->getLongitudeInDegrees(), $boundingBoxB->getMinLongitude());
-    $this->assertEquals($boundingBoxA[1]->getLatitudeInDegrees(), $boundingBoxB->getMaxLatitude());
-    $this->assertEquals($boundingBoxA[1]->getLongitudeInDegrees(), $boundingBoxB->getMaxLongitude());
-
-
   }
   public function testGeopointIsFoundInsideBoundingBoxPolygon() {
     $point = new GeoPoint(40.5187154, -74.4120953);

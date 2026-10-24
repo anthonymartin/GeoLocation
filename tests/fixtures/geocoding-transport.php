@@ -14,6 +14,7 @@ namespace AnthonyMartin\GeoLocation {
     public static $initializeFails;
     public static $optionFails;
     public static $executeThrows;
+    public static $executeError;
     public static $objectHandle;
 
     public static function reset() {
@@ -27,7 +28,8 @@ namespace AnthonyMartin\GeoLocation {
       self::$initializeFails = false;
       self::$optionFails = false;
       self::$executeThrows = false;
-      self::$objectHandle = false;
+      self::$executeError = false;
+      self::$objectHandle = true;
     }
   }
 
@@ -53,6 +55,9 @@ namespace AnthonyMartin\GeoLocation {
 
   function curl_exec($handle) {
     GeocodingCurlFixture::$events[] = 'execute';
+    if (GeocodingCurlFixture::$executeError) {
+      throw new \Error('Transport engine error');
+    }
     if (GeocodingCurlFixture::$executeThrows) {
       throw new \RuntimeException('Transport exception');
     }

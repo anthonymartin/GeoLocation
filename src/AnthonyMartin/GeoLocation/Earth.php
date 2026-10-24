@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace AnthonyMartin\GeoLocation;
 
 class Earth {
@@ -11,7 +13,7 @@ class Earth {
   public static $MIN_LON;  // -PI
   public static $MAX_LON;  //  PI
 
-  public static function getRadius($unit_of_measurement) {
+  public static function getRadius(mixed $unit_of_measurement): float {
     if (is_string($unit_of_measurement)) {
       $unit = strtolower($unit_of_measurement);
       if ($unit === 'miles' || $unit === 'mi') {
@@ -27,7 +29,7 @@ class Earth {
     /**
      * @return float
      */
-    public static function getMINLAT()
+    public static function getMINLAT(): float
     {
         return deg2rad(-90);
     }
@@ -35,7 +37,7 @@ class Earth {
     /**
      * @return float
      */
-    public static function getMAXLAT()
+    public static function getMAXLAT(): float
     {
         return deg2rad(90);
     }
@@ -43,7 +45,7 @@ class Earth {
     /**
      * @return float
      */
-    public static function getMINLON()
+    public static function getMINLON(): float
     {
         return deg2rad(-180);
     }
@@ -51,7 +53,7 @@ class Earth {
     /**
      * @return float
      */
-    public static function getMAXLON()
+    public static function getMAXLON(): float
     {
         return deg2rad(180);
     }

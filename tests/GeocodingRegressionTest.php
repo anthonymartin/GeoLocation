@@ -5,7 +5,7 @@ namespace {
   require_once __DIR__ . '/fixtures/geocoding-transport.php';
 
   use AnthonyMartin\GeoLocation\GeoPoint;
-  use AnthonyMartin\GeoLocation\GeoLocation;
+  use AnthonyMartin\GeoLocation\GoogleGeocoder;
   use AnthonyMartin\GeoLocation\GeocodingCurlFixture;
   use AnthonyMartin\GeoLocation\Exceptions\CurlErrorException;
   use AnthonyMartin\GeoLocation\Exceptions\NoApiKeyException;
@@ -20,7 +20,7 @@ namespace {
     public function testAddressAndKeyAreEncodedAndTimeoutsAreBounded() {
       $address = '123 Main St & Suite #4, Montréal';
       $key = 'key&reserved=/?+#';
-      $point = GeoPoint::fromAddress($address, $key);
+      $point = (new GoogleGeocoder($key))->geocode($address);
       $this->assertSame(40.5, $point->getLatitude());
       $this->assertSame(-74.4, $point->getLongitude());
       $url = GeocodingCurlFixture::$options[CURLOPT_URL];
@@ -38,87 +38,61 @@ namespace {
       GeocodingCurlFixture::$body = '{"status":"OK","results":[' .
         '{"geometry":{"location":{"lat":0,"lng":0}}},' .
         '{"geometry":{"location":{"lat":12,"lng":34}}}]}';
-      $point = GeoPoint::fromAddress('ambiguous address', 'key');
+      $point = (new GoogleGeocoder('key'))->geocode('ambiguous address');
       $this->assertEquals(0, $point->getLatitude());
       $this->assertEquals(0, $point->getLongitude());
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
 
-    public function testLegacyGeocoderPreservesTheCompleteDecodedResponse() {
-      GeocodingCurlFixture::$body = '{"status":"OK","extra":"kept","results":[' .
-        '{"formatted_address":"First","geometry":{"location":{"lat":0,"lng":0}}},' .
-        '{"formatted_address":"Second","geometry":{"location":{"lat":12,"lng":34}}}]}';
-      $response = GeoLocation::getGeocodeFromGoogle('ambiguous address', 'key');
-      $this->assertEquals(json_decode(GeocodingCurlFixture::$body), $response);
-      $this->assertCount(2, $response->results);
+    public function testPartialMatchesReturnTheFirstValidatedPoint() {
+      GeocodingCurlFixture::$body = '{"status":"OK","results":[' .
+        '{"partial_match":true,"geometry":{"location":{"lat":"40.5","lng":"-74.4"}}}]}';
+      $point = (new GoogleGeocoder('key'))->geocode('partial address');
+      $this->assertSame(40.5, $point->getLatitude());
+      $this->assertSame(-74.4, $point->getLongitude());
+    }
+
+    public function testFinallyReleasesTheHandleForEngineErrorsToo() {
+      GeocodingCurlFixture::$executeError = true;
+      try {
+        (new GoogleGeocoder('key'))->geocode('address');
+        $this->fail('Expected a transport engine error.');
+      } catch (\Error $error) {
+        $this->assertSame('Transport engine error', $error->getMessage());
+      }
+      // An Error trace can retain function arguments until the Error is released.
+      unset($error);
+      $this->assertSame(array('execute', 'destroy'), GeocodingCurlFixture::$events);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
 
     public function testMissingKeyFailsBeforeOpeningConnection() {
-      foreach (array(null, '') as $key) {
+      foreach (array('') as $key) {
         $this->captureException(function () use ($key) {
-          GeoPoint::fromAddress('address', $key);
+          (new GoogleGeocoder($key))->geocode('address');
         }, NoApiKeyException::class);
       }
       $this->assertSame(0, GeocodingCurlFixture::$initializes);
       $this->assertSame(0, GeocodingCurlFixture::$closes);
     }
 
-    public function testLegacyGeocoderReturnsApiErrorsWithoutValidation() {
-      foreach (array('ZERO_RESULTS', 'REQUEST_DENIED', 'OVER_QUERY_LIMIT') as $status) {
-        foreach (array(null, 'key') as $key) {
-          GeocodingCurlFixture::reset();
-          GeocodingCurlFixture::$body = json_encode(array('status' => $status, 'error_message' => 'Details', 'results' => array()));
-          $this->assertEquals(json_decode(GeocodingCurlFixture::$body), GeoLocation::getGeocodeFromGoogle('address', $key));
-          $this->assertSame(1, GeocodingCurlFixture::$closes);
-          $this->assertSame(5, GeocodingCurlFixture::$options[CURLOPT_CONNECTTIMEOUT]);
-          $this->assertSame(10, GeocodingCurlFixture::$options[CURLOPT_TIMEOUT]);
-        }
-      }
-    }
-
-    public function testLegacyGeocoderReturnsNullOnTransportOrJsonFailure() {
-      foreach (array(false, '', '{', '<html>Error</html>') as $body) {
-        GeocodingCurlFixture::reset();
-        GeocodingCurlFixture::$body = $body;
-        $this->assertNull(GeoLocation::getGeocodeFromGoogle('address'));
-        $this->assertSame(1, GeocodingCurlFixture::$closes);
-      }
-      foreach (array('initializeFails', 'optionFails', 'executeThrows') as $failure) {
-        GeocodingCurlFixture::reset();
-        GeocodingCurlFixture::$$failure = true;
-        $this->assertNull(GeoLocation::getGeocodeFromGoogle('address'));
-        $this->assertSame($failure === 'initializeFails' ? 0 : 1, GeocodingCurlFixture::$closes);
-      }
-    }
-
-    public function testLegacyGeocoderPreservesDecodedScalarsAndHttpErrorBodies() {
-      foreach (array('null', 'false', '42', '"text"', '[]', '{}', '{"status":"REQUEST_DENIED"}') as $body) {
-        GeocodingCurlFixture::reset();
-        GeocodingCurlFixture::$body = $body;
-        GeocodingCurlFixture::$httpStatus = 403;
-        $this->assertEquals(json_decode($body), GeoLocation::getGeocodeFromGoogle('address', 'key'));
-        $this->assertSame(1, GeocodingCurlFixture::$closes);
-      }
-    }
-
     public function testCurlFailurePreservesErrorAfterExecutionAndClosesHandle() {
       GeocodingCurlFixture::$body = false;
       GeocodingCurlFixture::$error = 'Operation timed out after 10000 milliseconds';
       $exception = $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, CurlErrorException::class);
       $this->assertSame(GeocodingCurlFixture::$error, $exception->getMessage());
       $this->assertInstanceOf(UnexpectedResponseException::class, $exception);
       $this->assertInstanceOf(\AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface::class, $exception);
-      $this->assertSame(array('execute', 'error', 'close'), GeocodingCurlFixture::$events);
+      $this->assertSame(array('execute', 'error', 'destroy'), GeocodingCurlFixture::$events);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
 
     public function testInitializationFailureHasAClearError() {
       GeocodingCurlFixture::$initializeFails = true;
       $exception = $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, CurlErrorException::class);
       $this->assertStringContainsString('initialize cURL', $exception->getMessage());
       $this->assertSame(0, GeocodingCurlFixture::$closes);
@@ -127,7 +101,7 @@ namespace {
     public function testOptionFailureClosesHandle() {
       GeocodingCurlFixture::$optionFails = true;
       $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, CurlErrorException::class);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
@@ -135,14 +109,14 @@ namespace {
     public function testTransportExceptionClosesHandle() {
       GeocodingCurlFixture::$executeThrows = true;
       $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, RuntimeException::class);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
 
     public function testObjectHandleIsReleasedWithoutDeprecatedCurlClose() {
       GeocodingCurlFixture::$objectHandle = true;
-      GeoPoint::fromAddress('address', 'key');
+      (new GoogleGeocoder('key'))->geocode('address');
       $this->assertSame(array('execute', 'destroy'), GeocodingCurlFixture::$events);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
     }
@@ -151,7 +125,7 @@ namespace {
       GeocodingCurlFixture::$objectHandle = true;
       GeocodingCurlFixture::$executeThrows = true;
       $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, RuntimeException::class);
       $this->assertSame(array('execute', 'destroy'), GeocodingCurlFixture::$events);
       $this->assertSame(1, GeocodingCurlFixture::$closes);
@@ -163,7 +137,7 @@ namespace {
         GeocodingCurlFixture::$httpStatus = $status;
         GeocodingCurlFixture::$body = '<html>HTTP error</html>';
         $exception = $this->captureException(function () {
-          GeoPoint::fromAddress('address', 'key');
+          (new GoogleGeocoder('key'))->geocode('address');
         }, UnexpectedResponseException::class);
         $this->assertStringContainsString('HTTP status ' . $status, $exception->getMessage());
         $this->assertSame(1, GeocodingCurlFixture::$closes);
@@ -175,7 +149,7 @@ namespace {
         GeocodingCurlFixture::reset();
         GeocodingCurlFixture::$body = $body;
         $exception = $this->captureException(function () {
-          GeoPoint::fromAddress('address', 'key');
+          (new GoogleGeocoder('key'))->geocode('address');
         }, UnexpectedResponseException::class);
         $this->assertStringContainsString('invalid JSON', $exception->getMessage());
         $this->assertSame(1, GeocodingCurlFixture::$closes);
@@ -185,7 +159,7 @@ namespace {
     public function testZeroResultsHasAClearError() {
       GeocodingCurlFixture::$body = '{"status":"ZERO_RESULTS","results":[]}';
       $exception = $this->captureException(function () {
-        GeoPoint::fromAddress('address', 'key');
+        (new GoogleGeocoder('key'))->geocode('address');
       }, UnexpectedResponseException::class);
       $this->assertStringContainsString('no results (ZERO_RESULTS)', $exception->getMessage());
       $this->assertSame(1, GeocodingCurlFixture::$closes);
@@ -196,7 +170,7 @@ namespace {
         GeocodingCurlFixture::reset();
         GeocodingCurlFixture::$body = json_encode(array('status' => $status, 'error_message' => 'Details from Google'));
         $exception = $this->captureException(function () {
-          GeoPoint::fromAddress('address', 'key');
+          (new GoogleGeocoder('key'))->geocode('address');
         }, UnexpectedResponseException::class);
         $this->assertStringContainsString($status, $exception->getMessage());
         $this->assertStringContainsString('Details from Google', $exception->getMessage());
@@ -221,7 +195,7 @@ namespace {
         GeocodingCurlFixture::reset();
         GeocodingCurlFixture::$body = $body;
         $this->captureException(function () {
-          GeoPoint::fromAddress('address', 'key');
+          (new GoogleGeocoder('key'))->geocode('address');
         }, UnexpectedResponseException::class);
         $this->assertSame(1, GeocodingCurlFixture::$closes);
       }
