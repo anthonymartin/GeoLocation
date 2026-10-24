@@ -1,7 +1,6 @@
 <?php
 namespace AnthonyMartin\GeoLocation\Interfaces;
 
-/** @deprecated Removed with the legacy GeoLocation class in 3.0. */
 interface GeoLocationInterface {
 	public static function fromDegrees($latitude, $longitude);
 	public static function fromRadians($latitude, $longitude);

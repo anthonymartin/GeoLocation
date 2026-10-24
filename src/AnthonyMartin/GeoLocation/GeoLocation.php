@@ -16,7 +16,6 @@ namespace AnthonyMartin\GeoLocation;
  *
  * @author Anthony Martin
  * @version November 21 2012
- * @deprecated Removed in 3.0. Use GeoPoint, BoundingBox, and GoogleGeocoder.
  */
 class GeoLocation implements Interfaces\GeoLocationInterface {
 
@@ -186,7 +185,6 @@ class GeoLocation implements Interfaces\GeoLocationInterface {
 	}
 	/**
 	 *  Returns Google's raw, unvalidated decoded response, or null on failure
-	 * @deprecated Removed in 3.0; use GoogleGeocoder::geocode() and handle exceptions.
 	 *  eg. $response = GeoLocation::getGeocodeFromGoogle($location, $key);
 	 *		$latitude = $response->results[0]->geometry->location->lat;
 	 *	    $longitude = $response->results[0]->geometry->location->lng;
