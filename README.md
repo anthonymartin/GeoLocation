@@ -6,7 +6,7 @@ GeoLocation for PHP offers convenient and easy to use methods for geocoding, geo
 Features include:
 
 1. Retrieve bounding box coordinates. Just define a coordinate and the size of your bounding box.
-2. calculate distances between geopoints/coordinates
+2. Calculate distances between geopoints/coordinates
 3. Solve point in polygon problems (identify whether a given point is within the bounds of a polygon)
 
 
@@ -20,31 +20,54 @@ composer require anthonymartin/geo-location:^2.1
 
 The library supports PHP 5.4 and later and requires the cURL and JSON extensions.
 BCMath is not required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
-case-insensitively. Coordinates must be finite numeric values within latitude
-±90° and longitude ±180°; numeric strings are normalized to floats.
+case-insensitively. Both `distanceTo()` and `boundingBox()` require an explicit
+unit argument; neither has a default unit. Distances use a spherical Earth
+approximation.
+
+`new GeoPoint($latitude, $longitude, $inRadians = false)` takes latitude first,
+then longitude. By default the values are degrees, within ±90° latitude and
+±180° longitude. Pass `true` as the third argument to supply radians instead.
+`GeoPoint` accepts finite numeric values and normalizes numeric strings to floats.
+`getLatitude()` and `getLongitude()` return degrees; pass `true` to either getter
+for radians.
+
+Use [Composer 2.2 LTS](https://getcomposer.org/download/) when installing on
+PHP 5.4–7.1.
 
 Examples
 ========
+
+These examples use the v2.1 API. Save each PHP example in your application's
+root directory, beside `vendor/`, after installing the package. Replace the
+API-key placeholder in geocoding examples with your Google API key.
 
 Get distance between two points:
 --------------------------------------------------------
 ```php
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use AnthonyMartin\GeoLocation\GeoPoint;
 
 $geopointA = new GeoPoint(40.5187154, -74.4120953);
 $geopointB = new GeoPoint(40.65, -73.95);
-$distance = $geopointA->distanceTo($geopointB, 'miles');
+$distance = $geopointA->distanceTo($geopointB, 'miles'); // approximately 25.8886 miles
 ```
 
 
 Get latitude and longitude from address or location
 --------------------------------------------------------
-In order to use this method, you'll need to register at [Google Cloud Console](https://console.cloud.google.com) and enable the [Geocoding API](https://console.cloud.google.com/google/maps-apis/apis/geocoding-backend.googleapis.com)
+Follow Google's [Geocoding API setup guide](https://developers.google.com/maps/documentation/geocoding/get-api-key)
+to configure billing, enable the API, and create an API key. `GeoPoint::fromAddress($address, $apiKey = null)`
+is static and returns a `GeoPoint`. An API key is required: omitting it throws
+`NoApiKeyException`.
 
 ```php
 <?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
 use AnthonyMartin\GeoLocation\GeoPoint;
 
 $geopoint = GeoPoint::fromAddress('New York, NY 10001', 'google-api-key-goes-here');
@@ -64,20 +87,35 @@ Get bounding box coordinates
 ```php
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use AnthonyMartin\GeoLocation\GeoPoint;
 
 $geopointA = new GeoPoint(40.5187154, -74.4120953);
 $boundingBox = $geopointA->boundingBox(3, 'miles');
-$boundingBox->getMaxLatitude();
-$boundingBox->getMaxLongitude();
-$boundingBox->getMinLatitude();
-$boundingBox->getMinLongitude();
+$maxLatitude = $boundingBox->getMaxLatitude();
+$maxLongitude = $boundingBox->getMaxLongitude();
+$minLatitude = $boundingBox->getMinLatitude();
+$minLongitude = $boundingBox->getMinLongitude();
 
 ```
+
+`boundingBox($distance, $unit_of_measurement)` returns a `BoundingBox`. The
+distance is a nonnegative search radius, not the box's width or height. The box
+encloses that radius and can also contain points farther away; use `distanceTo()`
+when you need to check the distance itself. Box coordinate getters return degrees.
 
 Check whether a point is inside a bounding box
 --------------------------------------------------------
 ```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+
+$geopointA = new GeoPoint(40.5187154, -74.4120953);
+$boundingBox = $geopointA->boundingBox(3, 'miles');
 if ($boundingBox->contains($geopointA)) {
   echo "GeoPoint is in the bounding box!";
 }
@@ -91,21 +129,28 @@ How to find if coordinates/geopoint are in a polygon.
 ```php
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use AnthonyMartin\GeoLocation\GeoPoint;
 use AnthonyMartin\GeoLocation\Polygon;
 
 $geopointA = new GeoPoint(40.5187154, -74.4120953);
 $polygon = Polygon::fromArray(array(
-    [$lat1, $lon1],
-    [$lat2, $lon2],
-    [$lat3, $lon3],
-    [$lat4, $lon4]
+    [40.50, -74.45],
+    [40.50, -74.35],
+    [40.55, -74.35],
+    [40.55, -74.45]
 ));
 if ($geopointA->inPolygon($polygon)) {
   echo "GeoPoint is in Polygon!";
 }
 ```
  
+`Polygon::fromArray(array $vertices)` accepts `[latitude, longitude]` pairs in
+degrees, ordered around the perimeter, and returns a `Polygon`. The closing edge
+is added implicitly. `$point->inPolygon($polygon)` and
+`$polygon->containsGeoPoint($point)` both return a boolean.
+
 Polygons use planar ray casting: they must not cross the antimeridian and must
 have at least three vertices when tested. Boundary behavior is half-open, so
 some edges are inside and others are outside. Use `BoundingBox::contains()` for
@@ -116,6 +161,8 @@ Transform bounding box coordinates into a polygon
 ```php
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
+
 use AnthonyMartin\GeoLocation\GeoPoint;
 
 $geopointA = new GeoPoint(40.5187154, -74.4120953);
@@ -125,12 +172,9 @@ $polygon = $boundingBox->toPolygon();
 
 `toPolygon()` is an alias of `getPolygon()`. Vertices now follow the perimeter
 in SW, SE, NE, NW order; the previous version swapped the final two corners.
-For a box that does not cross the antimeridian, polygon containment works too:
-```php
-if ($geopointA->inPolygon($polygon)) {
-  echo "GeoPoint is in Polygon / Bounding Box!";
-}
-```
+For a box that does not cross the antimeridian, pass the returned polygon to
+`$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
+the antimeridian, use `$boundingBox->contains($geopointA)` instead.
 
 
 Exceptions and legacy API
@@ -138,6 +182,12 @@ Exceptions and legacy API
 All library exceptions implement `AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface`:
 
 ```php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use AnthonyMartin\GeoLocation\GeoPoint;
+
 try {
   $point = GeoPoint::fromAddress('New York', 'your-api-key');
 } catch (\AnthonyMartin\GeoLocation\Exceptions\ExceptionInterface $error) {
@@ -145,10 +195,10 @@ try {
 }
 ```
 
-Existing exception classes share the library's `Exceptions\Exception` base.
-Invalid units throw `Exceptions\InvalidUnitException`, which also preserves
-compatibility with PHP's `\InvalidArgumentException`. Use `ExceptionInterface`
-to catch both families without changing existing exception inheritance.
+Invalid units throw `Exceptions\InvalidUnitException`, which extends PHP's
+`\InvalidArgumentException`. The other library exception classes extend the
+library's `Exceptions\Exception` base. Use `ExceptionInterface` to catch both
+families.
 
 The `GeoLocation` class remains available but is deprecated in favor of
 `GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method still returns the
@@ -157,6 +207,7 @@ radius is calculated.
 
 Running Tests
 --------
+Run these commands from the root of a checkout of this repository.
 Full development tests require PHP 7.3 or later. Composer selects PHPUnit 9.6
 on older development runtimes and PHPUnit 12.5 on PHP 8.3 or later:
 
