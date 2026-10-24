@@ -15,7 +15,7 @@ Installation and compatibility
 ========
 
 ```bash
-composer require anthonymartin/geo-location:^2.1
+composer require anthonymartin/geo-location:^2.1.1
 ```
 
 The library supports PHP 5.4 and later. The cURL and JSON extensions are needed
@@ -40,7 +40,7 @@ PHP 5.4–7.1.
 Examples
 ========
 
-These examples use the v2.1 API. Save each PHP example in your application's
+These examples use the v2.1.1 API. Save each PHP example in your application's
 root directory, beside `vendor/`, after installing the package. Replace the
 API-key placeholder in geocoding examples with your Google API key.
 
@@ -154,8 +154,8 @@ degrees, ordered around the perimeter, and returns a `Polygon`. The closing edge
 is added implicitly. `$point->inPolygon($polygon)` and
 `$polygon->containsGeoPoint($point)` both return a boolean.
 
-Polygons use planar ray casting: they must not cross the antimeridian and must
-return `false` for fewer than three vertices. Boundary behavior is half-open, so
+Polygons use planar ray casting and must not cross the antimeridian. Containment
+returns `false` for fewer than three vertices. Boundary behavior is half-open, so
 some edges are inside and others are outside. Use `BoundingBox::contains()` for
 inclusive box boundaries. Vertices can be added incrementally with `addVertex()`.
 
@@ -207,7 +207,8 @@ try {
 Invalid units throw `Exceptions\InvalidUnitException`, which extends PHP's
 `\InvalidArgumentException`. The other library exception classes extend the
 library's `Exceptions\Exception` base. Use `ExceptionInterface` to catch both
-families.
+families. `CurlErrorException` extends `UnexpectedResponseException`, so existing
+`fromAddress()` error catches also handle transport failures.
 
 The `GeoLocation` class remains available but is deprecated in favor of
 `GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method returns Google's raw, unvalidated decoded response
@@ -232,10 +233,17 @@ PHP versions, install production dependencies with `composer install --no-dev`
 
 ```bash
 php tests/legacy-runtime.php
+php tests/backward-compatibility-runtime.php
 php -n tests/without-bcmath.php
 ```
 
 CI runs the full suite on PHP 7.3–8.5 and runtime checks on PHP 5.4–7.2.
+The compatibility suite covers the 2.0.1 behaviors restored in 2.1.1. Additional
+jobs install and exercise geometry without cURL. To check a local runtime
+missing cURL or JSON, run `php tests/without-geocoding-extensions.php`.
+
+Version 2.1.0 users should upgrade to 2.1.1; see the [changelog](CHANGELOG.md)
+for restored behavior and retained validation/correctness fixes.
 
 
 

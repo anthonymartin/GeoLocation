@@ -1,10 +1,61 @@
 # Changelog
 
+## 2.1.1 — 2026-10-23
+
+Version 2.1.0 unintentionally changed public behaviors that worked in 2.0.1.
+Version 2.1.1 restores them while retaining the correctness fixes. Users of
+2.1.0 should upgrade to 2.1.1.
+
+### Restored compatibility
+
+- Legacy `GeoLocation::getGeocodeFromGoogle()` returns Google's raw, unvalidated
+  decoded response, including API error statuses and responses to requests
+  without a key. Transport failures and invalid JSON return `null` again.
+- `GeoPoint::fromAddress()` transport errors are again catchable as
+  `UnexpectedResponseException`; `CurlErrorException` now extends it and keeps
+  the descriptive transport error message.
+- `BoundingBox::getVertices()` and `getGeoPoints()` restore the 2.0.1 index order:
+  SW, SE, NW, NE. Version 2.1.0 unintentionally changed that order. If you build
+  polygons from these arrays yourself, use `getPolygon()` or `getPerimeter()`
+  for a proper SW, SE, NE, NW ring. New `getSouthWest()`, `getSouthEast()`,
+  `getNorthWest()`, and `getNorthEast()` methods provide explicit corner access.
+- Remove the constructor requirement from `BoundingBoxInterface`, allowing
+  existing subclasses with their own constructors to load again.
+- Containment tests for polygons with zero, one, or two vertices return `false`
+  instead of throwing; empty polygons no longer emit a warning.
+- Coordinate getters preserve validated integer, float, and numeric-string
+  input types. Values converted between degrees and radians are floats.
+- cURL and JSON are Composer suggestions, needed only for geocoding. Geometry
+  installs and runs without them. Missing extensions produce a clear library
+  exception in `fromAddress()` and `null` in the legacy geocoder.
+
+### Correctness fixes retained from 2.1.0
+
+- Non-numeric, NaN, infinite, and out-of-range coordinates still throw, as do
+  reversed bounding-box latitudes and malformed polygon vertices. These
+  previously caused wrong results or silent data corruption.
+- Setters validate before changing state and synchronize degrees and radians.
+- Haversine distances remain stable for identical and nearby points; the last
+  decimals can differ from 2.0.1's spherical-law-of-cosines results.
+- Bounding-box polygons remain proper rings. `BoundingBox::contains()` remains
+  inclusive, handles antimeridian crossings, and includes zero-distance centers.
+  General polygon containment remains planar and half-open; it does not support
+  antimeridian-crossing rings.
+- BCMath remains unnecessary. Geocoding keeps encoded URL parameters, 5-second
+  connection and 10-second total timeouts, and handle cleanup. The modern
+  `fromAddress()` API still validates responses. `ExceptionInterface` remains
+  the common library catch type.
+
+### Verification
+
+- Add a dedicated 2.0.1 compatibility suite shared by PHPUnit and standalone
+  PHP 5.4–7.2 checks. CI covers PHP 5.4–8.5, with additional no-cURL installation
+  and geometry checks on PHP 7.4 and 8.5.
+
 ## 2.1.0 — 2026-10-23
 
 - Correct bounding-box polygons to SW, SE, NE, NW order and add the documented
-  `toPolygon()` alias. Consumers indexing vertices should note the last two
-  corners have exchanged positions.
+  `toPolygon()` alias. See 2.1.1 for restored indexed-corner compatibility.
 - Add inclusive `BoundingBox::contains()`, including antimeridian crossings,
   equivalent ±180° longitudes, and zero-distance boxes.
 - Accept zero-valued box coordinates; reject non-finite or reversed latitude
