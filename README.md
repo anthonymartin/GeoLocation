@@ -27,7 +27,9 @@ approximation.
 `new GeoPoint($latitude, $longitude, $inRadians = false)` takes latitude first,
 then longitude. By default the values are degrees, within ±90° latitude and
 ±180° longitude. Pass `true` as the third argument to supply radians instead.
-`GeoPoint` accepts finite numeric values and normalizes numeric strings to floats.
+`GeoPoint` accepts finite numeric values. Getters in the input unit preserve
+the original integer, float, or numeric-string value; converted coordinates
+are floats. Degree-mode `BoundingBox` getters preserve input types too.
 `getLatitude()` and `getLongitude()` return degrees; pass `true` to either getter
 for radians.
 

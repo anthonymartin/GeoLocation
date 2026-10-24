@@ -20,7 +20,7 @@ function checkRuntime($condition, $message) {
 }
 
 $point = new GeoPoint('40.5', '-74.4');
-checkRuntime($point->getLatitude() === 40.5, 'Numeric strings must become floats.');
+checkRuntime($point->getLatitude() === '40.5', 'Numeric strings must retain their type.');
 checkRuntime($point->distanceTo(new GeoPoint(40.5, -74.4), 'KM') === 0.0, 'Identical points must have zero distance.');
 $point->setDegLat(41);
 $point->setRadLon(deg2rad(-74));

@@ -107,7 +107,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     return new BoundingBox($minLat, $minLon, $maxLat, $maxLon, true);
   }
   /**
-   * @return float
+   * @return float|int|string
    */
   public function getMinLongitude()
   {
@@ -115,7 +115,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * @return float
+   * @return float|int|string
    */
   public function getMinLatitude()
   {
@@ -123,7 +123,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * @return float
+   * @return float|int|string
    */
   public function getMaxLongitude()
   {
@@ -131,7 +131,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * @return float
+   * @return float|int|string
    */
   public function getMaxLatitude()
   {
