@@ -3,6 +3,13 @@ GeoLocation for PHP
 
 GeoLocation for PHP offers convenient and easy to use methods for geocoding, geolocation and geometry functions in PHP.
 
+Repository history: this project was previously hosted at
+[`anthonymartin/GeoLocation.php`](https://github.com/anthonymartin/GeoLocation.php).
+Its current canonical repository is
+[`anthonymartin/GeoLocation`](https://github.com/anthonymartin/GeoLocation).
+Both URLs identify the same GitHub repository (ID `6956914`); the Composer
+package remains `anthonymartin/geo-location`.
+
 Features include:
 
 1. Retrieve bounding box coordinates. Just define a coordinate and the size of your bounding box.
