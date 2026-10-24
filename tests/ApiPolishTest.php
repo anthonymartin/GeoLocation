@@ -12,55 +12,14 @@ use AnthonyMartin\GeoLocation\Interfaces\PolygonInterface;
 use AnthonyMartin\GeoLocation\Polygon;
 use PHPUnit\Framework\TestCase;
 
-readonly class LabelledReviewPoint extends GeoPoint {
-    private string $label;
-    public string $uninitialized;
-
-    public function __construct(float $lat, float $lon, string $label, public object $metadata) {
-        parent::__construct($lat, $lon);
-        $this->label = $label;
-        $metadata->constructorCalls++;
-    }
-
-    public function label(): string { return $this->label; }
-}
-
-readonly class ChildReviewPoint extends LabelledReviewPoint {
-    private string $label;
-    protected float $degLat;
-
-    public function __construct(float $lat, float $lon, string $label, object $metadata) {
-        parent::__construct($lat, $lon, $label, $metadata);
-        $this->label = 'child label';
-    }
-
-    public function childLabel(): string { return $this->label; }
-}
-
 final class ApiPolishTest extends TestCase {
-    public function testReplacementsPreserveSubclassFieldsWithoutCallingItsConstructor(): void {
-        $metadata = (object) ['constructorCalls' => 0];
-        $point = new ChildReviewPoint(40, -74, 'Office', $metadata);
-        foreach ([$point->withLatitude(41), $point->withLongitude(-73)] as $copy) {
-            self::assertInstanceOf(ChildReviewPoint::class, $copy);
-            self::assertNotSame($point, $copy);
-            self::assertSame('Office', $copy->label());
-            self::assertSame('child label', $copy->childLabel());
-            self::assertSame($metadata, $copy->metadata);
-            self::assertFalse((new ReflectionProperty($copy, 'uninitialized'))->isInitialized($copy));
-        }
-        self::assertSame(1, $metadata->constructorCalls);
-        self::assertSame(40.0, $point->getLatitude());
-        self::assertSame(-74.0, $point->getLongitude());
-        self::assertSame(41.0, $point->withLatitude(41)->getLatitude());
-        self::assertSame(-73.0, $point->withLongitude(-73)->getLongitude());
-    }
-
-    public function testReplacementsPreserveUnchangedRadiansExactly(): void {
+    public function testReplacementsRetainCoordinateValuesWithinFloatingPointPrecision(): void {
         $point = new GeoPoint(0.123456789012345, -1.23456789012345, true);
-        self::assertSame($point->getLongitude(true), $point->withLatitude(30)->getLongitude(true));
-        self::assertSame($point->getLatitude(true), $point->withLongitude(30)->getLatitude(true));
-        self::assertSame(0.123456789012345, $point->withLatitude(0.123456789012345, true)->getLatitude(true));
+        self::assertSame($point->getLongitude(), $point->withLatitude(30)->getLongitude());
+        self::assertEqualsWithDelta($point->getLongitude(true), $point->withLatitude(30)->getLongitude(true), 1e-15);
+        self::assertSame($point->getLatitude(), $point->withLongitude(30)->getLatitude());
+        self::assertEqualsWithDelta($point->getLatitude(true), $point->withLongitude(30)->getLatitude(true), 1e-15);
+        self::assertEqualsWithDelta(0.123456789012345, $point->withLatitude(0.123456789012345, true)->getLatitude(true), 1e-15);
     }
 
     public function testInterfaceAndImplementationNamedArgumentsAgree(): void {

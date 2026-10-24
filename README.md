@@ -5,12 +5,8 @@ Google geocoding for PHP 8.3+. Geometry works without optional extensions.
 
 ## Installation and compatibility
 
-This README describes the upcoming 3.1 release. Until it is tagged, see the
-[3.0 release documentation](https://github.com/anthonymartin/GeoLocation/blob/v3.0.0/README.md)
-for the available `^3.0` package.
-
 ```bash
-composer require anthonymartin/geo-location:^3.1
+composer require anthonymartin/geo-location:^3.0
 ```
 
 The library requires PHP 8.3 or later. Geometry needs neither cURL nor BCMath.
@@ -47,7 +43,7 @@ then longitude. Degrees must be within ±90° latitude and ±180° longitude; pa
 strings are accepted and normalized to floats. All coordinate getters return
 floats. `getLatitude()` and `getLongitude()` return degrees; pass `true` for radians.
 
-`GeoPoint` is immutable and declared `readonly`. To change a coordinate, assign
+`GeoPoint` is final and readonly. To change a coordinate, assign
 the new point returned by `withLatitude()` or `withLongitude()`; the original
 point remains unchanged. Both methods accept `true` as their second argument
 for radian input.
@@ -62,7 +58,7 @@ exceptions; accepting numeric strings does not mean accepting booleans or null.
 | --- | --- | --- |
 | `new GeoPoint(Number $latitude, Number $longitude, bool $inRadians = false)` | `GeoPoint` | Latitude first; immutable. |
 | `$point->getLatitude(bool $inRadians = false)` / `getLongitude(...)` | `float` | Degrees by default. |
-| `$point->withLatitude(Number $latitude, bool $inRadians = false)` / `withLongitude(...)` | `static` | New point; preserves subclass fields. |
+| `$point->withLatitude(Number $latitude, bool $inRadians = false)` / `withLongitude(...)` | `GeoPoint` | New validated point; original unchanged. |
 | `$point->distanceTo(GeoPointInterface $geopoint, string $unit_of_measurement)` | `float` | Explicit unit; spherical approximation. |
 | `$point->boundingBox(Number $distance, string $unit_of_measurement)` | `BoundingBox` | Nonnegative search radius. |
 | `$box->contains(GeoPointInterface $point)` | `bool` | Inclusive boundaries; supports antimeridian crossing. |
@@ -81,7 +77,7 @@ inputs have precise PHPDoc annotations checked by PHPStan.
 
 ## Examples
 
-These examples use the 3.1 API. Save each PHP example in your application's
+These examples use the 3.0 API. Save each PHP example in your application's
 root directory, beside `vendor/`, after installing the package. Replace the
 API-key placeholder in geocoding examples with your Google API key.
 
@@ -128,7 +124,7 @@ exceptions.
 
 ### Other providers and test doubles
 
-Since 3.1, application services can depend on
+In 3.0, application services can depend on
 `AnthonyMartin\GeoLocation\Interfaces\Geocoder` instead of a particular provider.
 `GoogleGeocoder` implements this interface. Supply another implementation for a
 different provider, or a local test double:

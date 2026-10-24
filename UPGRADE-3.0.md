@@ -1,4 +1,4 @@
-# Upgrading from 2.x to 3.x
+# Upgrading from 2.x to 3.0
 
 3.0 is an opt-in major release. Existing 2.x APIs remain supported as-is;
 2.1.3 removes the deprecation annotations and supersedes the retirement wording
@@ -13,7 +13,7 @@ Before: PHP 5.4 or later, `composer require anthonymartin/geo-location:^2.0`.
 After: PHP 8.3 or later:
 
 ```bash
-composer require anthonymartin/geo-location:^3.1
+composer require anthonymartin/geo-location:^3.0
 ```
 
 Geometry needs no optional extensions. Install cURL only if using
@@ -71,8 +71,9 @@ $point = $point->withLatitude(0.5, true)->withLongitude(-1, true);
 Every `with...()` call returns a new point. Existing references, including points
 already stored in a polygon or bounding box, remain unchanged. Capture the return
 value. These methods retain finite/range validation and throw without changing
-the original. Coordinate fields are readonly; setting dynamic properties or
-mutating protected fields from a subclass is no longer allowed.
+the original. Coordinate fields are private and readonly. `GeoPoint` is final; use composition
+or implement `GeoPointInterface` for application-specific state and behavior.
+Each replacement uses the validated constructor; there is no reflective copying.
 
 ## Coordinate types
 
@@ -171,26 +172,30 @@ errors. Other existing library exceptions keep their inheritance. Native PHP
 signature violations raise `TypeError`, which is separate from the library's
 validation exceptions.
 
-## Subclasses and interface implementations
+## Composition and interface implementations
 
-Before, methods generally had no native return types. After, overrides and
-implementations must match the declared signatures. For example:
+`GeoPoint` and `Polygon` are final readonly value objects. Replace subclasses
+with composition, keeping application-specific state outside the coordinate:
 
 ```php
-readonly class MyPoint extends GeoPoint {
-    public function distanceTo(\AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface $geopoint, mixed $unit_of_measurement): float {
-        return parent::distanceTo($geopoint, $unit_of_measurement);
-    }
+use AnthonyMartin\GeoLocation\Interfaces\GeoPointInterface;
+
+final readonly class Place {
+    public function __construct(public GeoPointInterface $point, public string $name) {}
 }
+
+$place = new Place(new GeoPoint(40.5, -74.4), 'Office');
+$moved = new Place($place->point->withLatitude(41), $place->name);
 ```
 
-`GeoPoint` subclasses must also be `readonly`. Geometry predicates return `bool`,
-coordinate/distance getters return `float`, vertex getters return `array`, and
-`Polygon::withVertex()` returns a new polygon. Interface factories return `self`,
-and interface methods return geometry interfaces. Concrete implementations may
-use covariant concrete returns. Check the interfaces when updating custom implementations.
-Constructors remain absent from interfaces, so a `BoundingBox` subclass can still
-use a different constructor signature.
+To supply different geometry behavior, implement the relevant interfaces instead.
+Methods declare native parameter and return types: predicates return `bool`,
+coordinate/distance getters return `float`, and vertex getters return `array` with
+PHPDoc element types. Interface factories return `self`; geometry results use
+interfaces. Concrete implementations may use covariant returns.
+
+Constructors remain absent from interfaces. `BoundingBox` is still subclassable;
+overrides must match the declared signatures, but its constructor is unconstrained.
 
 ## Deliberately unchanged
 
@@ -199,18 +204,10 @@ containment, without warnings. Malformed vertices still throw. There is no new
 minimum-vertex exception to handle. Geometry still uses haversine distances,
 requires no BCMath, and preserves the validation and containment fixes from 2.x.
 
-## API cleanup before 3.x adoption
+## Geocoder contract and named arguments
 
-The upcoming 3.1 release completes the 3.x API cleanup, including intentional
-changes to the initial v3.0.0 tag before adoption. It adds `Interfaces\Geocoder`, implemented by `GoogleGeocoder`. Depend on that
-interface when injecting an address-to-point service or supplying a test double.
-Existing calls to `(new GoogleGeocoder($apiKey))->geocode($address)` remain supported.
-
-Immutable replacements preserve initialized subclass fields, including private
-ancestor fields, without calling the constructor or `__clone()`. Object-valued
-fields retain their references, as in a shallow copy. Subclasses with metadata
-that depends on coordinates may override the protected `copyWithCoordinates()`
-hook to recompute that metadata. Uninitialized fields remain uninitialized.
+`Interfaces\Geocoder`, implemented by `GoogleGeocoder`, lets application services
+depend on an address-to-point contract and supply their own provider or test double.
 
 Interface and implementation parameter names agree:
 `BoundingBoxInterface::contains(GeoPointInterface $point)` and
@@ -225,7 +222,7 @@ these legacy properties.
 
 ## Immutable polygons
 
-Before (2.x and the initial v3.0.0 tag):
+Before (2.x):
 
 ```php
 $polygon = new Polygon();

@@ -10,11 +10,11 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 use AnthonyMartin\GeoLocation\Exceptions\OutOfBoundsException;
 
 /** Immutable geographic coordinate; all getters return floats. */
-readonly class GeoPoint implements Interfaces\GeoPointInterface {
-    protected float $radLat;
-    protected float $radLon;
-    protected float $degLat;
-    protected float $degLon;
+final readonly class GeoPoint implements GeoPointInterface {
+    private float $radLat;
+    private float $radLon;
+    private float $degLat;
+    private float $degLon;
 
     /**
      * @param int|float|numeric-string $latitude
@@ -32,61 +32,23 @@ readonly class GeoPoint implements Interfaces\GeoPointInterface {
     }
 
     /**
-     * Return a shallow copy with a new latitude, preserving subclass fields.
+     * Return a validated point with a new latitude; the original is unchanged.
      * @param int|float|numeric-string $latitude
      */
-    public function withLatitude(mixed $latitude, bool $inRadians = false): static {
+    public function withLatitude(mixed $latitude, bool $inRadians = false): self {
         $latitude = self::normalizeCoordinate($latitude, 'Latitude',
             $inRadians ? Earth::getMINLAT() : -90, $inRadians ? Earth::getMAXLAT() : 90);
-        return $this->copyWithCoordinates(
-            $inRadians ? $latitude : deg2rad($latitude), $this->radLon,
-            $inRadians ? rad2deg($latitude) : $latitude, $this->degLon
-        );
+        return new self($inRadians ? rad2deg($latitude) : $latitude, $this->degLon);
     }
 
     /**
-     * Return a shallow copy with a new longitude, preserving subclass fields.
+     * Return a validated point with a new longitude; the original is unchanged.
      * @param int|float|numeric-string $longitude
      */
-    public function withLongitude(mixed $longitude, bool $inRadians = false): static {
+    public function withLongitude(mixed $longitude, bool $inRadians = false): self {
         $longitude = self::normalizeCoordinate($longitude, 'Longitude',
             $inRadians ? Earth::getMINLON() : -180, $inRadians ? Earth::getMAXLON() : 180);
-        return $this->copyWithCoordinates(
-            $this->radLat, $inRadians ? $longitude : deg2rad($longitude),
-            $this->degLat, $inRadians ? rad2deg($longitude) : $longitude
-        );
-    }
-
-    /**
-     * Copy initialized instance fields without invoking subclass constructors or
-     * clone hooks. Object-valued fields are shared, as in a shallow clone.
-     * Subclasses with coordinate-dependent metadata may override this hook.
-     */
-    protected function copyWithCoordinates(float $radLat, float $radLon, float $degLat, float $degLon): static {
-        $reflection = new \ReflectionClass($this);
-        $copy = $reflection->newInstanceWithoutConstructor();
-        $coordinates = compact('radLat', 'radLon', 'degLat', 'degLon');
-        $copied = [];
-        // Walk each declaring class to include private ancestor fields too.
-        do {
-            foreach ($reflection->getProperties() as $property) {
-                if ($property->getDeclaringClass()->getName() !== $reflection->getName() ||
-                    $property->isStatic() || !$property->isInitialized($this)) {
-                    continue;
-                }
-                $name = $property->getName();
-                $slot = $property->isPrivate() ? $reflection->getName() . '::' . $name : $name;
-                if (isset($copied[$slot])) {
-                    continue;
-                }
-                $copied[$slot] = true;
-                $value = array_key_exists($name, $coordinates)
-                    ? $coordinates[$name] : $property->getValue($this);
-                $property->setValue($copy, $value);
-            }
-            $reflection = $reflection->getParentClass();
-        } while ($reflection !== false);
-        return $copy;
+        return new self($this->degLat, $inRadians ? rad2deg($longitude) : $longitude);
     }
 
     /**
@@ -119,7 +81,7 @@ readonly class GeoPoint implements Interfaces\GeoPointInterface {
     public function getDegLat(): float { return $this->degLat; }
     public function getDegLon(): float { return $this->degLon; }
 
-    protected static function normalizeCoordinate(mixed $coordinate, string $name, float $minimum, float $maximum): float {
+    private static function normalizeCoordinate(mixed $coordinate, string $name, float $minimum, float $maximum): float {
         if ((!is_int($coordinate) && !is_float($coordinate) && !is_string($coordinate)) || !is_numeric($coordinate)) {
             throw new InvalidArgumentException($name . ' must be a finite numeric value');
         }

@@ -15,7 +15,7 @@ final readonly class Polygon implements PolygonInterface {
 
     public function __construct(GeoPointInterface ...$vertices) {
         $this->vertices = array_values(array_map(
-            static fn(GeoPointInterface $point): GeoPoint => $point::class === GeoPoint::class
+            static fn(GeoPointInterface $point): GeoPoint => $point instanceof GeoPoint
                 ? $point : new GeoPoint($point->getLatitude(), $point->getLongitude()),
             $vertices
         ));
