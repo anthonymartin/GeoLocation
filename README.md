@@ -170,8 +170,14 @@ $boundingBox = $geopointA->boundingBox(5, 'mi');
 $polygon = $boundingBox->toPolygon();
 ```
 
-`toPolygon()` is an alias of `getPolygon()`. Vertices now follow the perimeter
-in SW, SE, NE, NW order; the previous version swapped the final two corners.
+`toPolygon()` is an alias of `getPolygon()`. Both build a proper ring in
+SW, SE, NE, NW order. `getPerimeter()` returns the four `GeoPoint` corners in
+that same ring order. For a single corner, use `getSouthWest()`, `getSouthEast()`,
+`getNorthWest()`, or `getNorthEast()`.
+
+`getVertices()` and `getGeoPoints()` retain the 2.0.1 order: SW, SE, NW, NE.
+That is not a perimeter; use `getPolygon()` or `getPerimeter()` when building
+polygons. Version 2.1.0 changed these indexes unintentionally; 2.1.1 restores them.
 For a box that does not cross the antimeridian, pass the returned polygon to
 `$geopointA->inPolygon($polygon)`. For inclusive box boundaries or a box crossing
 the antimeridian, use `$boundingBox->contains($geopointA)` instead.

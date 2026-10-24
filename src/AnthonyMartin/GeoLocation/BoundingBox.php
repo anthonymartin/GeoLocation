@@ -30,8 +30,8 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
     $this->maxLon = ($inRadians) ? rad2deg($maxLon) : $maxLon;
     $this->GeoPoints[] = new GeoPoint($minLat, $minLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($minLat, $maxLon, $inRadians);
-    $this->GeoPoints[] = new GeoPoint($maxLat, $maxLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($maxLat, $minLon, $inRadians);
+    $this->GeoPoints[] = new GeoPoint($maxLat, $maxLon, $inRadians);
   }
 
 
@@ -139,7 +139,8 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * @return array of GeoPoint
+   * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
+   * @return GeoPoint[]
    */
   public function getVertices()
   {
@@ -147,11 +148,34 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
   }
 
   /**
-   * @return array of GeoPoint
+   * Legacy corner order: SW, SE, NW, NE (not a polygon ring).
+   * @return GeoPoint[]
    */
   public function getGeoPoints()
   {
     return $this->GeoPoints;
+  }
+
+  /** @return GeoPoint */
+  public function getSouthWest() { return $this->GeoPoints[0]; }
+
+  /** @return GeoPoint */
+  public function getSouthEast() { return $this->GeoPoints[1]; }
+
+  /** @return GeoPoint */
+  public function getNorthWest() { return $this->GeoPoints[2]; }
+
+  /** @return GeoPoint */
+  public function getNorthEast() { return $this->GeoPoints[3]; }
+
+  /**
+   * Corners in perimeter order: SW, SE, NE, NW.
+   * Antimeridian-crossing boxes still require contains() for containment.
+   * @return GeoPoint[]
+   */
+  public function getPerimeter() {
+    $vertices = $this->getVertices();
+    return array($vertices[0], $vertices[1], $vertices[3], $vertices[2]);
   }
 
   /**
@@ -189,7 +213,7 @@ class BoundingBox implements Interfaces\BoundingBoxInterface {
    */
   public function getPolygon() {
     $polygon = new Polygon();
-    foreach($this->getVertices() as $vertex) {
+    foreach($this->getPerimeter() as $vertex) {
       $polygon->addVertex($vertex);
     }
     return $polygon;

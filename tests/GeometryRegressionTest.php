@@ -12,11 +12,11 @@ use AnthonyMartin\GeoLocation\Exceptions\InvalidBoundingBoxCoordinatesException;
 
 class GeometryRegressionTest extends TestCase
 {
-    public function testBoundingBoxVerticesFollowItsPerimeter()
+    public function testBoundingBoxPerimeterPreservesCorrectPolygonConstruction()
     {
         $box = new BoundingBox(10, 30, 20, 40);
         $expected = array(array(10, 30), array(10, 40), array(20, 40), array(20, 30));
-        foreach ($box->getVertices() as $index => $vertex) {
+        foreach ($box->getPerimeter() as $index => $vertex) {
             $this->assertEquals($expected[$index][0], $vertex->getLatitude());
             $this->assertEquals($expected[$index][1], $vertex->getLongitude());
         }
@@ -28,6 +28,26 @@ class GeometryRegressionTest extends TestCase
             $this->assertTrue($box->toPolygon()->containsGeoPoint(new GeoPoint($coordinates[0], $coordinates[1])));
         }
         $this->assertFalse($box->toPolygon()->containsGeoPoint(new GeoPoint(21, 35)));
+    }
+
+    public function testLegacyCornerIndexesAndNamedGettersAgreeForOrdinaryAndWrappedBoxes()
+    {
+        foreach (array(array(10, 30, 20, 40), array(-10, 170, 10, -170)) as $bounds) {
+            $box = new BoundingBox($bounds[0], $bounds[1], $bounds[2], $bounds[3]);
+            $expected = array(array($bounds[0], $bounds[1]), array($bounds[0], $bounds[3]),
+                array($bounds[2], $bounds[1]), array($bounds[2], $bounds[3]));
+            $names = array('getSouthWest', 'getSouthEast', 'getNorthWest', 'getNorthEast');
+            $vertices = $box->getVertices();
+            foreach ($names as $index => $name) {
+                $corner = $box->$name();
+                $this->assertSame($vertices[$index], $corner);
+                $this->assertEquals($expected[$index], array($corner->getLatitude(), $corner->getLongitude()));
+                $this->assertTrue($box->contains($corner));
+            }
+            $this->assertSame($vertices, $box->getGeoPoints());
+            $this->assertSame(array($vertices[0], $vertices[1], $vertices[3], $vertices[2]), $box->getPerimeter());
+            $this->assertSame($box->getPerimeter(), $box->getPolygon()->getVertices());
+        }
     }
 
     public function testZeroCoordinatesAndNumericStringsAreAccepted()
@@ -49,8 +69,8 @@ class GeometryRegressionTest extends TestCase
         $this->assertTrue($box->contains(new GeoPoint(45, 90)));
         $this->assertFalse($box->contains(new GeoPoint(46, 90)));
         $vertices = $box->getVertices();
-        $this->assertEquals(M_PI / 2, $vertices[2]->getLongitude(true));
-        $this->assertEquals(0, $vertices[3]->getLongitude(true));
+        $this->assertEquals(M_PI / 2, $vertices[3]->getLongitude(true));
+        $this->assertEquals(0, $vertices[2]->getLongitude(true));
     }
 
     public function testMalformedBoundingBoxCoordinatesThrowLibraryExceptions()
