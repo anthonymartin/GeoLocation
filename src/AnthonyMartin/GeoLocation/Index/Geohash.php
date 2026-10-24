@@ -35,9 +35,13 @@ final class Geohash {
 
     /** @return array{N:string,NE:string,E:string,SE:string,S:string,SW:string,W:string,NW:string} Grid neighbors wrap at both coordinate endpoints. */
     public static function neighbors(string $hash): array {
-        [$x,$y,$precision]=self::indices($hash);[$columns,$rows]=self::dimensions($precision);
-        $at=static fn(int $dx,int $dy): string=>self::fromIndices(self::wrap($x+$dx,$columns),self::wrap($y+$dy,$rows),$precision);
-        return ['N'=>$at(0,1),'NE'=>$at(1,1),'E'=>$at(1,0),'SE'=>$at(1,-1),'S'=>$at(0,-1),'SW'=>$at(-1,-1),'W'=>$at(-1,0),'NW'=>$at(-1,1)];
+        [$x,$y,$precision]=self::indices($hash);
+        return [
+            'N'=>self::neighbor($x,$y,$precision,0,1), 'NE'=>self::neighbor($x,$y,$precision,1,1),
+            'E'=>self::neighbor($x,$y,$precision,1,0), 'SE'=>self::neighbor($x,$y,$precision,1,-1),
+            'S'=>self::neighbor($x,$y,$precision,0,-1), 'SW'=>self::neighbor($x,$y,$precision,-1,-1),
+            'W'=>self::neighbor($x,$y,$precision,-1,0), 'NW'=>self::neighbor($x,$y,$precision,-1,1),
+        ];
     }
 
     /** Finest precision whose equatorial cell spans at least the diameter; use cover() for actual coverage. */
@@ -74,7 +78,7 @@ final class Geohash {
         $merged=[];
         foreach($ranges as [$start,$end]) {
             $last=count($merged)-1;
-            if($last>=0 && $start<=$merged[$last][1]+1) {$merged[$last][1]=max($merged[$last][1],$end);}
+            if($last>=0 && $start<=$merged[$last][1]+1) {$merged[$last]=[$merged[$last][0],max($merged[$last][1],$end)];}
             else {$merged[]=[$start,$end];}
         }
         $count=0.0;
@@ -84,6 +88,11 @@ final class Geohash {
         foreach($merged as [$start,$end]) {for($x=$start;$x<=$end;$x++) {for($y=$firstY;$y<=$lastY;$y++) {$hashes[]=self::fromIndices($x,$y,$precision);}}}
         sort($hashes,SORT_STRING);
         return $hashes;
+    }
+
+    private static function neighbor(int $x,int $y,int $precision,int $dx,int $dy): string {
+        [$columns,$rows]=self::dimensions($precision);
+        return self::fromIndices(self::wrap($x+$dx,$columns),self::wrap($y+$dy,$rows),$precision);
     }
 
     private static function wrap(int $value,int $size): int {
