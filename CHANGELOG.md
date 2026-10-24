@@ -36,6 +36,15 @@ Applications using `^2.0` remain on 2.x.
 - CI covers PHP 8.3–8.5 and clean geometry installations without cURL. The 2.x
   compatibility suite remains on the maintenance branch.
 
+## 2.1.3 — 2026-10-24
+
+- Keep 2.x supported alongside 3.x with no scheduled end-of-support date.
+  This supersedes the 12-month period announced in 2.1.2. Upgrading to 3.0
+  is optional; `^2.0` continues to receive compatible 2.x releases.
+- Remove API deprecation annotations, including the legacy class annotation.
+  Existing 2.x APIs remain supported as-is; migration guidance applies only to
+  applications choosing 3.0. No runtime behavior changes.
+
 ## 2.1.2 — 2026-10-23
 
 - Document the 3.0 migration before removing or changing APIs: legacy

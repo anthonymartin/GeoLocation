@@ -1,7 +1,8 @@
 # Upgrading from 2.x to 3.0
 
-3.0 is an opt-in major release. The documentation-only 2.1.2 release announced
-these deprecations first. Stay on `^2.0` until your application is ready.
+3.0 is an opt-in major release. Existing 2.x APIs remain supported as-is;
+2.1.3 removes the deprecation annotations and supersedes the retirement wording
+in 2.1.2. Stay on `^2.0` unless you choose to migrate.
 The `2.x` branch retains PHP 5.4 support and receives security and bug fixes
 alongside 3.x, with no scheduled end-of-support date.
 
