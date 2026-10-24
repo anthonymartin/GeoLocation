@@ -201,8 +201,8 @@ library's `Exceptions\Exception` base. Use `ExceptionInterface` to catch both
 families.
 
 The `GeoLocation` class remains available but is deprecated in favor of
-`GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method still returns the
-complete validated Google response; `getAngular()` is zero until a bounding
+`GeoPoint`, `BoundingBox`, and `Polygon`. Its geocoding method returns Google's raw, unvalidated decoded response
+(including API error statuses), or `null` on transport/JSON failure; `getAngular()` is zero until a bounding
 radius is calculated.
 
 Running Tests

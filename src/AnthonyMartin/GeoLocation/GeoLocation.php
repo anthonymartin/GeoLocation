@@ -185,16 +185,16 @@ class GeoLocation implements Interfaces\GeoLocationInterface {
 		return Earth::getRadius($unit_of_measurement);
 	}
 	/**
-	 *  Retrieves Geocoding information from Google
+	 *  Returns Google's raw, unvalidated decoded response, or null on failure
 	 *  eg. $response = GeoLocation::getGeocodeFromGoogle($location, $key);
 	 *		$latitude = $response->results[0]->geometry->location->lat;
 	 *	    $longitude = $response->results[0]->geometry->location->lng;
 	 *	@param string $location address, city, state, etc.
 	 *	@param string $key - the key provided by Google
-	 *	@return \stdClass
+	 *	@return mixed
 	 */
 	public static function getGeocodeFromGoogle($location, $key=null) {
-		return GoogleGeocoder::geocode($location, $key);
+		return GoogleGeocoder::request($location, $key);
 	}
 	public static function MilesToKilometers($miles) {
 		return $miles * 1.6093439999999999;
