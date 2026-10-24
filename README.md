@@ -18,8 +18,9 @@ Installation and compatibility
 composer require anthonymartin/geo-location:^2.1
 ```
 
-The library supports PHP 5.4 and later and requires the cURL and JSON extensions.
-BCMath is not required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
+The library supports PHP 5.4 and later. The cURL and JSON extensions are needed
+only for Google geocoding; geometry functions work without them. BCMath is not
+required. Distances accept `km`, `kilometers`, `mi`, or `miles`,
 case-insensitively. Both `distanceTo()` and `boundingBox()` require an explicit
 unit argument; neither has a default unit. Distances use a spherical Earth
 approximation.

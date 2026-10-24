@@ -24,9 +24,7 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "ext-curl": "*",
-        "ext-json": "*"
+        "php": ">=5.4.0"
     },
     "autoload": {
         "psr-4": {
@@ -39,5 +37,9 @@
     "scripts": {
         "test": "phpunit --bootstrap vendor/autoload.php tests",
         "test:no-bcmath": "@php -n tests/without-bcmath.php"
+    },
+    "suggest": {
+        "ext-curl": "Required only for Google geocoding with GeoPoint::fromAddress() or GeoLocation::getGeocodeFromGoogle().",
+        "ext-json": "Required only to decode Google geocoding responses."
     }
 }

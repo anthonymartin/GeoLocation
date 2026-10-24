@@ -83,6 +83,12 @@ class GoogleGeocoder {
   }
 
   private static function transport($address, $apiKey) {
+    if (!function_exists('curl_init')) {
+      throw new UnexpectedResponseException('Google geocoding requires the cURL extension.');
+    }
+    if (!function_exists('json_decode')) {
+      throw new UnexpectedResponseException('Google geocoding requires the JSON extension.');
+    }
     $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' .
       rawurlencode($address) . '&key=' . rawurlencode((string) $apiKey);
     $handle = curl_init();

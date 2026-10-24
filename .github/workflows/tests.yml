@@ -46,3 +46,23 @@ jobs:
       - run: php -r 'require "vendor/autoload.php"; require "tests/legacy-runtime.php";'
       - run: php -n tests/without-bcmath.php
       - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  geometry-without-curl:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        php: ['7.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, :curl, :bcmath
+          coverage: none
+          tools: composer:v2
+      - run: php -r 'if (function_exists("curl_init")) { exit(1); }'
+      - run: composer install --no-dev --no-interaction --prefer-dist
+      - run: php -r 'require "vendor/autoload.php"; require "tests/legacy-runtime.php";'
+      - run: php tests/without-geocoding-extensions.php
+      - run: php -n tests/without-geocoding-extensions.php
+      - run: composer test:no-bcmath
