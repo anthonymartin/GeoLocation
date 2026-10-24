@@ -16,8 +16,9 @@ namespace AnthonyMartin\GeoLocation;
  *
  * @author Anthony Martin
  * @version November 21 2012
+ * @deprecated Use GeoPoint and BoundingBox for new code.
  */
-class GeoLocation {
+class GeoLocation implements Interfaces\GeoLocationInterface {
 
 	protected $radLat;  // latitude in radians
 	protected $radLon;  // longitude in radians
@@ -25,7 +26,7 @@ class GeoLocation {
 	protected $degLat;	 // latitude in degrees
 	protected $degLon;  // longitude in degrees
 	
-	protected $angular; // angular radius
+	protected $angular = 0.0; // angular radius of the last boundingCoordinates call
 
 	const EARTHS_RADIUS_KM = 6371.01;
 	const EARTHS_RADIUS_MI = 3958.762079;
@@ -36,10 +37,10 @@ class GeoLocation {
 	protected static $MAX_LON;  //  PI
 
 	public function __construct() {
-		self::$MIN_LAT = deg2rad(-90);   // -PI/2
-		self::$MAX_LAT = deg2rad(90);    //  PI/2
-		self::$MIN_LON = deg2rad(-180);  // -PI
-		self::$MAX_LON = deg2rad(180);   //  PI
+		self::$MIN_LAT = Earth::getMINLAT();
+		self::$MAX_LAT = Earth::getMAXLAT();
+		self::$MIN_LON = Earth::getMINLON();
+		self::$MAX_LON = Earth::getMAXLON();
 	}
 
 	/**
@@ -48,12 +49,12 @@ class GeoLocation {
 	 * @return GeoLocation
 	 */
 	public static function fromDegrees($latitude, $longitude) {
-		$location = new Self();
-		$location->radLat = deg2rad($latitude);
-		$location->radLon = deg2rad($longitude);
-		$location->degLat = $latitude;
-		$location->degLon = $longitude;
-		$location->checkBounds();
+		$point = new GeoPoint($latitude, $longitude);
+		$location = new self();
+		$location->radLat = $point->getLatitude(true);
+		$location->radLon = $point->getLongitude(true);
+		$location->degLat = $point->getLatitude();
+		$location->degLon = $point->getLongitude();
 		return $location;
 	}
 
@@ -63,19 +64,17 @@ class GeoLocation {
 	 * @return GeoLocation
 	 */
 	public static function fromRadians($latitude, $longitude) {
-		$location = new Self();
-		$location->radLat = $latitude;
-		$location->radLon = $longitude;
-		$location->degLat = rad2deg($latitude);
-		$location->degLon = rad2deg($longitude);
-		$location->checkBounds();
+		$point = new GeoPoint($latitude, $longitude, true);
+		$location = new self();
+		$location->radLat = $point->getLatitude(true);
+		$location->radLon = $point->getLongitude(true);
+		$location->degLat = $point->getLatitude();
+		$location->degLon = $point->getLongitude();
 		return $location;
 	}
 
 	protected function checkBounds() {
-		if ($this->radLat < self::$MIN_LAT || $this->radLat > self::$MAX_LAT ||
-				$this->radLon < self::$MIN_LON || $this->radLon > self::$MAX_LON)
-			throw new \Exception("Invalid Argument");
+		new GeoPoint($this->radLat, $this->radLon, true);
 	}
 
   /**
@@ -90,11 +89,9 @@ class GeoLocation {
    * argument.
    */
 	public function distanceTo(GeoLocation $location, $unit_of_measurement) {
-		$radius = $this->getEarthsRadius($unit_of_measurement);
-
-		return acos(sin($this->radLat) * sin($location->radLat) +
-					cos($this->radLat) * cos($location->radLat) *
-					cos($this->radLon - $location->radLon)) * $radius;
+		$point = new GeoPoint($this->radLat, $this->radLon, true);
+		$other = new GeoPoint($location->radLat, $location->radLon, true);
+		return $point->distanceTo($other, $unit_of_measurement);
 	}
 
 	/**
@@ -126,7 +123,8 @@ class GeoLocation {
 	}
 	
 	/**
-	 * @return double angular radius.
+	 * @return double angular radius in radians from the last successful
+	 * boundingCoordinates() call, or 0.0 before a bounding calculation.
 	 */
 	public function getAngular() {
 		return $this->angular;
@@ -134,7 +132,7 @@ class GeoLocation {
 
 	public function __toString() {
 		return "(" . $this->degLat . ", " . $this->degLon . ") = (" .
-				$this->radLat . " rad, " . $this->radLon . " rad";
+				$this->radLat . " rad, " . $this->radLon . " rad)";
 	}
 
 
@@ -174,62 +172,29 @@ class GeoLocation {
    * </ul>
    */
 	public function boundingCoordinates($distance, $unit_of_measurement) {
-		$radius = $this->getEarthsRadius($unit_of_measurement);
-		if ($radius < 0 || $distance < 0) throw new \Exception('Arguments must be greater than 0.');
-
-		// angular distance in radians on a great circle
-		$this->angular = $distance / $radius;
-
-		$minLat = $this->radLat - $this->angular;
-		$maxLat = $this->radLat + $this->angular;
-
-		$minLon = 0;
-		$maxLon = 0;
-		if ($minLat > self::$MIN_LAT && $maxLat < self::$MAX_LAT) {
-			$deltaLon = asin(sin($this->angular) /
-				cos($this->radLat));
-			$minLon = $this->radLon - $deltaLon;
-			if ($minLon < self::$MIN_LON) $minLon += 2 * pi();
-			$maxLon = $this->radLon + $deltaLon;
-			if ($maxLon > self::$MAX_LON) $maxLon -= 2 * pi();
-		} else {
-			// a pole is within the distance
-			$minLat = max($minLat, self::$MIN_LAT);
-			$maxLat = min($maxLat, self::$MAX_LAT);
-			$minLon = self::$MIN_LON;
-			$maxLon = self::$MAX_LON;
-		}
-
+		$point = new GeoPoint($this->radLat, $this->radLon, true);
+		$bounds = $point->boundingBox($distance, $unit_of_measurement);
+		$this->angular = $distance / $this->getEarthsRadius($unit_of_measurement);
 		return array(
-			GeoLocation::fromRadians($minLat, $minLon), 
-			GeoLocation::fromRadians($maxLat, $maxLon)
+			self::fromDegrees($bounds->getMinLatitude(), $bounds->getMinLongitude()),
+			self::fromDegrees($bounds->getMaxLatitude(), $bounds->getMaxLongitude())
 		);
 	}
 
 	protected function getEarthsRadius($unit_of_measurement) {
-		$u = $unit_of_measurement;
-		if($u == 'miles' || $u == 'mi')
-			return $radius = self::EARTHS_RADIUS_MI;
-		elseif($u == 'kilometers' || $u == 'km')
-			return $radius = self::EARTHS_RADIUS_KM;
-
-		else throw new \Exception('You must supply a valid unit of measurement');
+		return Earth::getRadius($unit_of_measurement);
 	}
 	/**
 	 *  Retrieves Geocoding information from Google
 	 *  eg. $response = GeoLocation::getGeocodeFromGoogle($location, $key);
-	 *		$latitude = $response->results[0]->geometry->location->lng;
+	 *		$latitude = $response->results[0]->geometry->location->lat;
 	 *	    $longitude = $response->results[0]->geometry->location->lng;
 	 *	@param string $location address, city, state, etc.
 	 *	@param string $key - the key provided by Google
 	 *	@return \stdClass
 	 */
 	public static function getGeocodeFromGoogle($location, $key=null) {
-		$url = 'https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($location).'&sensor=false&key='.$key;
-		$ch = curl_init();
-	    curl_setopt($ch, CURLOPT_URL,$url);
-	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	    return json_decode(curl_exec($ch));
+		return GoogleGeocoder::geocode($location, $key);
 	}
 	public static function MilesToKilometers($miles) {
 		return $miles * 1.6093439999999999;
@@ -238,4 +203,3 @@ class GeoLocation {
 		return $km * 0.621371192237334;
 	}
 }
-

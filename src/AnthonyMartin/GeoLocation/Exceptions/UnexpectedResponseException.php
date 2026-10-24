@@ -2,6 +2,6 @@
 
 namespace AnthonyMartin\GeoLocation\Exceptions;
 
-class UnexpectedResponseException extends \Exception
+class UnexpectedResponseException extends Exception
 {
 }

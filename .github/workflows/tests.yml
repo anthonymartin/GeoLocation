@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.3', '7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, json, mbstring, dom, xml, xmlwriter, :bcmath
+          coverage: none
+          tools: composer:v2
+      - run: composer update --no-interaction --prefer-dist
+      - run: composer validate --strict
+      - run: composer test
+      - run: composer test:no-bcmath
+      - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  legacy-runtime:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['5.4', '5.5', '5.6', '7.0', '7.1', '7.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, json, :bcmath
+          coverage: none
+          tools: composer:2.2
+      - run: composer install --no-dev --no-interaction --prefer-dist
+      - run: php -r 'require "vendor/autoload.php"; require "tests/legacy-runtime.php";'
+      - run: php -n tests/without-bcmath.php
+      - run: find src -name '*.php' -print0 | xargs -0 -n1 php -l

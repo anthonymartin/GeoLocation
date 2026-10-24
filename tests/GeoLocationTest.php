@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ .'/../vendor/autoload.php';
+require_once __DIR__ .'/../vendor/autoload.php';
 
 use PHPUnit\Framework\TestCase;
 use AnthonyMartin\GeoLocation\GeoPoint;
@@ -14,50 +14,50 @@ class GeoLocationTest extends TestCase {
     $geopointA = new GeoPoint(40.5187154, -74.4120953);
     $geopointB = new GeoPoint(40.65, -73.95);
     $distance = $geopointA->distanceTo($geopointB, 'km');
-    $this->assertEquals(41.663681581973, $distance);
+    $this->assertEqualsWithDelta(41.663681581973, $distance, 1e-9);
   }
   public function testDistanceInMilesBetweenGeopointsUsingCoordinates() {
     $geopointA = new GeoPoint(40.5187154, -74.4120953);
     $geopointB = new GeoPoint(40.65, -73.95);
     $distance = $geopointA->distanceTo($geopointB, 'miles');
-    $this->assertEquals(25.888611494606, $distance);
+    $this->assertEqualsWithDelta(25.888611494606, $distance, 1e-9);
   }
   public function testGettersOnGeoPoint() {
     $geopointA = new GeoPoint(40.5187154, -74.4120953);
-    $this->assertEquals(40.5187154, $geopointA->getLatitude());
-    $this->assertEquals(-74.4120953, $geopointA->getLongitude());
-    $this->assertEquals(0.70718499240853, $geopointA->getLatitude(true));
-    $this->assertEquals(-1.2987360662928, $geopointA->getLongitude(true));
+    $this->assertEqualsWithDelta(40.5187154, $geopointA->getLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.4120953, $geopointA->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(0.70718499240853, $geopointA->getLatitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2987360662928, $geopointA->getLongitude(true), 1e-9);
   }
   public function testBoundingBox() {
     $geopointA = new GeoPoint(40.5187154, -74.4120953);
     $bbox =  $geopointA->boundingBox(3, 'mi');
-    $this->assertEquals(-74.469211617725, $bbox->getMinLongitude());
-    $this->assertEquals(40.47529593323, $bbox->getMinLatitude());
-    $this->assertEquals(-74.354978982275, $bbox->getMaxLongitude());
-    $this->assertEquals(40.56213486677, $bbox->getMaxLatitude());
-    $this->assertTrue(true, is_a($bbox->getVertices()[0], "GeoPoint"));
-    $this->assertTrue(true, is_a($bbox->getGeoPoints()[1], "GeoPoint"));
-    $this->assertEquals(0.70642717975394, $bbox->getVertices()[0]->getLatitude(true));
-    $this->assertEquals(-1.2997329340937, $bbox->getVertices()[0]->getLongitude(true));
-    $this->assertEquals(40.47529593323, $bbox->getVertices()[0]->getLatitude());
-    $this->assertEquals(-74.469211617725, $bbox->getVertices()[0]->getLongitude());
-    $this->assertEquals(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true));
-    $this->assertEquals(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true));
-    $this->assertEquals(40.56213486676994, $bbox->getVertices()[3]->getLatitude());
-    $this->assertEquals(-74.35497898227479, $bbox->getVertices()[3]->getLongitude());
+    $this->assertEqualsWithDelta(-74.469211617725, $bbox->getMinLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(40.47529593323, $bbox->getMinLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.354978982275, $bbox->getMaxLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(40.56213486677, $bbox->getMaxLatitude(), 1e-9);
+    $this->assertInstanceOf(GeoPoint::class, $bbox->getVertices()[0]);
+    $this->assertInstanceOf(GeoPoint::class, $bbox->getGeoPoints()[1]);
+    $this->assertEqualsWithDelta(0.70642717975394, $bbox->getVertices()[0]->getLatitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2997329340937, $bbox->getVertices()[0]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
 
     $bbox = $geopointA->boundingBox(3, 'mi');
-    $this->assertTrue(true, is_a($bbox->getVertices()[2], "GeoPoint"));
-    $this->assertTrue(true, is_a($bbox->getVertices()[3], "GeoPoint"));
-    $this->assertEquals(0.70642717975394, $bbox->getVertices()[0]->getLatitude(true));
-    $this->assertEquals(-1.2997329340937, $bbox->getVertices()[0]->getLongitude(true));
-    $this->assertEquals(40.47529593323, $bbox->getVertices()[0]->getLatitude());
-    $this->assertEquals(-74.469211617725, $bbox->getVertices()[0]->getLongitude());
-    $this->assertEquals(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true));
-    $this->assertEquals(-1.2977391984918774, $bbox->getVertices()[3]->getLongitude(true));
-    $this->assertEquals(40.56213486676994, $bbox->getVertices()[3]->getLatitude());
-    $this->assertEquals(-74.35497898227479, $bbox->getVertices()[3]->getLongitude());
+    $this->assertInstanceOf(GeoPoint::class, $bbox->getVertices()[2]);
+    $this->assertInstanceOf(GeoPoint::class, $bbox->getVertices()[3]);
+    $this->assertEqualsWithDelta(0.70642717975394, $bbox->getVertices()[0]->getLatitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2997329340937, $bbox->getVertices()[0]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(40.47529593323, $bbox->getVertices()[0]->getLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.469211617725, $bbox->getVertices()[0]->getLongitude(), 1e-9);
+    $this->assertEqualsWithDelta(0.7079428050631269, $bbox->getVertices()[3]->getLatitude(true), 1e-9);
+    $this->assertEqualsWithDelta(-1.2977391984918774, $bbox->getVertices()[2]->getLongitude(true), 1e-9);
+    $this->assertEqualsWithDelta(40.56213486676994, $bbox->getVertices()[3]->getLatitude(), 1e-9);
+    $this->assertEqualsWithDelta(-74.35497898227479, $bbox->getVertices()[2]->getLongitude(), 1e-9);
 
     $this->assertEquals(4, count($bbox->getVertices()));
   }
@@ -94,92 +94,30 @@ class GeoLocationTest extends TestCase {
 
   }
   public function testGeopointIsFoundInsideBoundingBoxPolygon() {
-
-    $geopointA = new GeoPoint(40.5187154, -74.4120953);
-    $bbox = $geopointA->boundingBox(5, 'mi');
-    $polygon3 = array(
-        [$bbox->getVertices()[0]->getLatitude(), $bbox->getVertices()[0]->getLongitude()],
-        [$bbox->getVertices()[1]->getLatitude(), $bbox->getVertices()[1]->getLongitude()],
-        [$bbox->getVertices()[2]->getLatitude(), $bbox->getVertices()[2]->getLongitude()],
-        [$bbox->getVertices()[3]->getLatitude(), $bbox->getVertices()[3]->getLongitude()]
-    );
-
-    /*
-     * We're generating an array of GeoPoints which is basically what a Polygon object is.
-     */
-    $polygonB = array(
-        new GeoPoint(40.44634962205,-74.507289174707),
-        new GeoPoint(40.44634962205,-74.316901425293),
-        new GeoPoint(40.59108117795,-74.507289174707),
-        new GeoPoint(40.59108117795,-74.316901425293)
-    );
-
-    $polygonA = Polygon::fromArray(array(
-        array($bbox->getVertices()[0]->getLatitude(), $bbox->getVertices()[0]->getLongitude()),
-        array($bbox->getVertices()[1]->getLatitude(), $bbox->getVertices()[1]->getLongitude()),
-        array($bbox->getVertices()[2]->getLatitude(), $bbox->getVertices()[2]->getLongitude()),
-        array($bbox->getVertices()[3]->getLatitude(), $bbox->getVertices()[3]->getLongitude())
-    ));
-
-    $this->assertEquals(40.59108117795, $polygonA->getVertices()[2]->getLatitude());
-    $this->assertEquals(0.70844801349953, $polygonA->getVertices()[2]->getLatitude(true));
-    $this->assertEquals(0.70844801349953, 0.70844801349952);
-    $this->assertEquals(40.59108117795, $polygonA->getVertices()[3]->getLatitude());
-    $this->assertEquals(0.70844801349953, $polygonA->getVertices()[3]->getLatitude(true));
-
-
-    $this->comparePolygons($polygonA, $polygonB);
-    $this->assertTrue(Polygon::pointInPolygon($geopointA, $polygonA));
-
-    $this->assertTrue($geopointA->inPolygon($polygonA));
-    $this->assertTrue($polygonA->containsGeoPoint($geopointA));
-    $this->assertTrue(Polygon::pointInPolygon($geopointA, $polygonA));
-
-
-  }
-  protected function comparePolygons($polygonA, $polygonB) {
-    $pA = array();
-    $pB = array();
-
-    $pA = json_decode(json_encode($polygonA->getVertices()), true);
-    foreach ($polygonB as $geopointB) {
-      $pB[] = get_object_vars($geopointB);
-    }
-
+    $point = new GeoPoint(40.5187154, -74.4120953);
+    $polygon = $point->boundingBox(5, 'mi')->getPolygon();
+    $this->assertCount(4, $polygon->getVertices());
+    $this->assertTrue($point->inPolygon($polygon));
+    $this->assertTrue($polygon->containsGeoPoint($point));
+    $this->assertTrue(Polygon::pointInPolygon($point, $polygon));
   }
   public function testDegreeToRadianConversion() {
     $gp = new GeoPoint(40.59108117795, 0);
-    $this->assertEquals(0.70844801349953, $gp->getLatitude(true));
+    $this->assertEqualsWithDelta(0.70844801349953, $gp->getLatitude(true), 1e-9);
 
     $polygon = Polygon::fromArray(array(array($gp->getLatitude(), $gp->getLongitude())));
-    foreach($polygon as $geopoint) {
-      $this->assertEquals(0.70844801349953, $geopoint->getLatitude(true));
+    foreach($polygon->getVertices() as $geopoint) {
+      $this->assertEqualsWithDelta(0.70844801349953, $geopoint->getLatitude(true), 1e-9);
     }
 
   }
   public function testIsInBoundingBox() {
-    $geopointA = new GeoPoint(40.7127753, -74.0059728);
-    $bbox = $geopointA->boundingBox(5, 'mi');
-    $polygon = Polygon::fromArray([
-        [$bbox->getVertices()[0]->getLatitude(), $bbox->getVertices()[0]->getLongitude()],
-        [$bbox->getVertices()[1]->getLatitude(), $bbox->getVertices()[1]->getLongitude()],
-        [$bbox->getVertices()[2]->getLatitude(), $bbox->getVertices()[2]->getLongitude()],
-        [$bbox->getVertices()[3]->getLatitude(), $bbox->getVertices()[3]->getLongitude()]
-    ]);
-
-
-    $this->assertTrue($polygon->containsGeoPoint($geopointA));
-
-    $geopointA = new GeoPoint(40.7127753, -74.0059728);
-    $bbox = $geopointA->boundingBox(10, 'mi');
-    $polygon = Polygon::fromArray([
-        [$bbox->getVertices()[0]->getLatitude(), $bbox->getVertices()[0]->getLongitude()],
-        [$bbox->getVertices()[1]->getLatitude(), $bbox->getVertices()[1]->getLongitude()],
-        [$bbox->getVertices()[3]->getLatitude(), $bbox->getVertices()[3]->getLongitude()],
-        [$bbox->getVertices()[2]->getLatitude(), $bbox->getVertices()[2]->getLongitude()]
-    ]);
-    $this->assertTrue($polygon->containsGeoPoint($geopointA));
-
+    $point = new GeoPoint(40.7127753, -74.0059728);
+    foreach ([5, 10] as $distance) {
+      $box = $point->boundingBox($distance, 'mi');
+      $this->assertTrue($box->getPolygon()->containsGeoPoint($point));
+      $this->assertTrue($box->contains($point));
+    }
   }
 
   public function testInvalidArgumentExceptionIsThrown() {

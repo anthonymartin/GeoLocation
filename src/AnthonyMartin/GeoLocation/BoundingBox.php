@@ -5,7 +5,7 @@ use AnthonyMartin\GeoLocation\Earth;
 use AnthonyMartin\GeoLocation\Exceptions\InvalidArgumentException;
 use AnthonyMartin\GeoLocation\Exceptions\InvalidBoundingBoxCoordinatesException;
 
-class BoundingBox {
+class BoundingBox implements Interfaces\BoundingBoxInterface {
 
   protected $minLon;
   protected $minLat;
@@ -16,8 +16,13 @@ class BoundingBox {
 
   public function __construct($minLat, $minLon, $maxLat, $maxLon, $inRadians=false)
   {
-    if (!$minLat||!$minLon||!$maxLat||!$maxLon) {
-      throw new InvalidBoundingBoxCoordinatesException;
+    foreach (array($minLat, $minLon, $maxLat, $maxLon) as $coordinate) {
+      if (!is_numeric($coordinate) || !is_finite((float) $coordinate)) {
+        throw new InvalidBoundingBoxCoordinatesException('Bounding box coordinates must be finite numbers.');
+      }
+    }
+    if ($minLat > $maxLat) {
+      throw new InvalidBoundingBoxCoordinatesException('Minimum latitude must not exceed maximum latitude.');
     }
     $this->minLat = ($inRadians) ? rad2deg($minLat) : $minLat;
     $this->minLon = ($inRadians) ? rad2deg($minLon) : $minLon;
@@ -25,8 +30,8 @@ class BoundingBox {
     $this->maxLon = ($inRadians) ? rad2deg($maxLon) : $maxLon;
     $this->GeoPoints[] = new GeoPoint($minLat, $minLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($minLat, $maxLon, $inRadians);
-    $this->GeoPoints[] = new GeoPoint($maxLat, $minLon, $inRadians);
     $this->GeoPoints[] = new GeoPoint($maxLat, $maxLon, $inRadians);
+    $this->GeoPoints[] = new GeoPoint($maxLat, $minLon, $inRadians);
   }
 
 
@@ -67,7 +72,16 @@ class BoundingBox {
    */
   public static function fromGeoPoint(GeoPoint $geopoint, $distance, $unit_of_measurement) {
 		$radius = Earth::getRadius($unit_of_measurement);
-		if ($radius < 0 || $distance < 0) throw new InvalidArgumentException('Bounding box distance must be greater than or equal to 0.');
+		if (!is_numeric($distance) || !is_finite((float) $distance) || $distance < 0) {
+      throw new InvalidArgumentException('Bounding box distance must be a finite number greater than or equal to 0.');
+    }
+
+    // Preserve the original coordinates, including at the poles, without a
+    // radians round trip that can move a zero-size box away from its center.
+    if ($distance == 0) {
+      return new BoundingBox($geopoint->getLatitude(), $geopoint->getLongitude(),
+          $geopoint->getLatitude(), $geopoint->getLongitude());
+    }
 
 		// angular distance in radians on a great circle
 		$angularDistance = $distance / $radius;
@@ -141,6 +155,36 @@ class BoundingBox {
   }
 
   /**
+   * Test inclusive latitude/longitude bounds. A minimum longitude greater
+   * than the maximum longitude denotes a box crossing the antimeridian.
+   *
+   * @return bool
+   */
+  public function contains(GeoPoint $point)
+  {
+    $latitude = $point->getLatitude();
+    if ($latitude < $this->minLat || $latitude > $this->maxLat) {
+      return false;
+    }
+
+    $longitude = $point->getLongitude();
+    if ($this->containsLongitude($longitude)) {
+      return true;
+    }
+
+    // Both longitude endpoints describe the same meridian.
+    return abs($longitude) == 180 && $this->containsLongitude(-$longitude);
+  }
+
+  protected function containsLongitude($longitude)
+  {
+    if ($this->minLon <= $this->maxLon) {
+      return $longitude >= $this->minLon && $longitude <= $this->maxLon;
+    }
+    return $longitude >= $this->minLon || $longitude <= $this->maxLon;
+  }
+
+  /**
    * @return Polygon from bounding box coordinates
    */
   public function getPolygon() {
@@ -149,6 +193,13 @@ class BoundingBox {
       $polygon->addVertex($vertex);
     }
     return $polygon;
+  }
+
+  /**
+   * @return Polygon
+   */
+  public function toPolygon() {
+    return $this->getPolygon();
   }
 
 }

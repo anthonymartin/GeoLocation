@@ -3,14 +3,17 @@
 namespace AnthonyMartin\GeoLocation\Interfaces;
 
 use AnthonyMartin\GeoLocation\GeoPoint;
-use AnthonyMartin\GeoLocation;
 
 interface BoundingBoxInterface {
-  public function __construct($geopoint, $distance, $unit_of_measurement);
-  public function setGeoPoint(GeoPoint $geopoint);
-  public function setUnit($unit);
-  public function setDistance($distance);
-  public function calculate();
-
+  public function __construct($minLat, $minLon, $maxLat, $maxLon, $inRadians = false);
+  public static function fromGeoPoint(GeoPoint $geopoint, $distance, $unit_of_measurement);
+  public function contains(GeoPoint $geopoint);
+  public function getMinLatitude();
+  public function getMinLongitude();
+  public function getMaxLatitude();
+  public function getMaxLongitude();
+  public function getVertices();
+  public function getGeoPoints();
+  public function getPolygon();
+  public function toPolygon();
 }
-
